@@ -73,7 +73,7 @@ export default function RegisterPage() {
                         </fieldset>
 
                         <Button type="submit" variant={"secondary"} disabled={isSubmitting} className="btn btn-primary w-full">
-                            {isSubmitting ? (<> <LoaderCircle /> Logando... </>) : (<> <DoorOpen /> Logar</>)}
+                            {isSubmitting ? (<> <LoaderCircle className="animate-spin" /> Logando... </>) : (<> <DoorOpen /> Logar</>)}
                         </Button>
                     </form>
                 </div>

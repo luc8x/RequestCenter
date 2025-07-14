@@ -14,6 +14,15 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { DataTable } from "@/components/solicitacoes/minhasSolicitacoes/data-table";
 import { columns, Solicitacao } from "@/components/solicitacoes/minhasSolicitacoes/columns"
+import {
+    Dialog,
+    DialogContent,
+    DialogTrigger,
+    DialogHeader,
+    DialogTitle,
+    DialogFooter,
+    DialogClose,
+} from "@/components/ui/dialog"
 
 // Icons
 import { LoaderCircle } from 'lucide-react';
@@ -69,39 +78,75 @@ export default function SolicitacaoPage() {
     };
 
     return (
-        <div className="grid gap-4 grid-cols-2 justify-center">
-            <div>
-                <div className="bg-white rounded-lg shadow-lg p-6 border border-accent-foreground">
-                    <div className="flex justify-between mb-2">
-                        <h1 className="text-3xl font-semibold">Cadastrar Solicitação</h1>
+        <div className="grid gap-4 grid-cols-1 justify-center ">
+            <div className="bg-black/30 rounded-lg shadow-lg p-6 border border-accent-foreground mx-70">
+                <div className="flex justify-between mb-2 items-start">
+                    <div className="flex flex-col mb-2">
+                        <h1 className="text-3xl font-semibold text-white">Minhas Solicitações</h1>
+                        <p className="text-sm text-white">Todas as suas solicitações apareceram abaixo.</p>
                     </div>
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                        <fieldset className="flex flex-col gap-2">
-                            <Label>Assunto</Label>
-                            <Input type="text" {...register("assunto")} className="input" required placeholder="Assunto da solicitação" />
-                            {errors.assunto && <p className="text-red-500 text-sm">{errors.assunto.message}</p>}
-                        </fieldset>
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button variant="outlineGreen"><BadgePlus />Cadastrar Solicitação</Button>
+                        </DialogTrigger>
 
-                        <fieldset className="flex flex-col gap-2">
-                            <Label>Descrição</Label>
-                            <Textarea {...register("descricao")} required placeholder="Descreva a solicitação" />
-                            {errors.descricao && <p className="text-red-500 text-sm">{errors.descricao.message}</p>}
-                        </fieldset>
+                        <DialogContent>
+                            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                                <DialogHeader>
+                                    <DialogTitle>Cadastrar Solicitação</DialogTitle>
+                                </DialogHeader>
 
-                        {error && <p className="text-red-500 text-sm">{error}</p>}
+                                <fieldset className="flex flex-col gap-2">
+                                    <Label>Assunto</Label>
+                                    <Input
+                                        type="text"
+                                        {...register("assunto")}
+                                        placeholder="Assunto da solicitação"
+                                    />
+                                    {errors.assunto && (
+                                        <p className="text-red-500 text-sm">{errors.assunto.message}</p>
+                                    )}
+                                </fieldset>
 
-                        <Button type="submit" variant={"secondary"} disabled={isSubmitting} className="btn btn-primary w-full">
-                            {isSubmitting ? (<> <LoaderCircle /> Registrando... </>) : (<> <BadgePlus /> Cadastrar Solicitação</>)}
-                        </Button>
-                    </form>
+                                <fieldset className="flex flex-col gap-2">
+                                    <Label>Descrição</Label>
+                                    <Textarea
+                                        {...register("descricao")}
+                                        placeholder="Descreva a solicitação"
+                                    />
+                                    {errors.descricao && (
+                                        <p className="text-red-500 text-sm">{errors.descricao.message}</p>
+                                    )}
+                                </fieldset>
+
+                                {error && <p className="text-red-500 text-sm">{error}</p>}
+
+                                <DialogFooter>
+                                    <DialogClose asChild>
+                                        <Button type="button" variant="outline">
+                                        Fechar
+                                        </Button>
+                                    </DialogClose>
+                                    <Button type="submit" variant="secondary" disabled={isSubmitting}>
+                                        {isSubmitting ? (
+                                            <>
+                                                <LoaderCircle className="animate-spin" />
+                                                Registrando...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <BadgePlus />
+                                                Cadastrar
+                                            </>
+                                        )}
+                                    </Button>
+                                </DialogFooter>
+                            </form>
+                        </DialogContent>
+                    </Dialog>
+
                 </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow-lg p-6 border border-accent-foreground">
-                <div className="flex flex-col justify-between mb-2">
-                    <h1 className="text-3xl font-semibold">Minhas Solicitações</h1>
-                    <p className="text-sm text-gray-500">Todas as suas solicitações apareceram abaixo.</p>
-                </div>
+                
                 <DataTable columns={columns(handleDelete)} data={data} />
             </div>
         </div>

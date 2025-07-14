@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Central de Solicitação",
-  description: "Central de Solicitação",
+  title: "Request Center",
+  description: "Request Center",
   icons: {
 
   }
@@ -30,7 +30,7 @@ export default function RootLayout({
     <html lang="pt-BR">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        style={{ backgroundColor: '#040D0D' }}
+        style={{ backgroundColor: '#242426' }}
       >
         <Providers>{children}</Providers>
       </body>
