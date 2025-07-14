@@ -1,7 +1,5 @@
 "use client"
 
-import dynamic from "next/dynamic";
-
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";;
 import { registerSchema } from "@/schemas/authSchema";
@@ -13,13 +11,12 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { UserPlus } from 'lucide-react';
-import { DoorOpen } from 'lucide-react';
+import ParticulasDotsBackground from "@/components/TSparticulasBackground";
 
 // Icons
 import { LoaderCircle } from 'lucide-react';
-import ParticulasDotsBackground from "@/components/TSparticulasBackground";
-
+import { UserPlus } from 'lucide-react';
+import { DoorOpen } from 'lucide-react';
 
 type FormData = z.infer<typeof registerSchema>
 
@@ -32,9 +29,10 @@ export default function RegisterPage() {
     const onSubmit = async (data: FormData) => {
         setError("")
 
-        const res = await fetch("/api/auth/regista", {
+        const res = await fetch("/api/registra", {
             method: "POST",
             body: JSON.stringify(data),
+            headers: { "Content-Type": "application/json" },
         })
 
         if (res.ok) {
@@ -48,7 +46,7 @@ export default function RegisterPage() {
     return (
         <div className="relative min-h-screen flex items-center justify-center">
             <ParticulasDotsBackground />
-            <div className="bg-white/10 backdrop-blur rounded-lg shadow-lg p-6 border border-gray-600 text-white">
+            <div className="bg-white/10 backdrop-blur rounded-lg shadow-lg p-6 border border-white text-white">
                 <div className="flex justify-between mb-2">
                     <h1 className="text-3xl font-semibold">Cadastrar-se</h1>
                     <a href="/login" className="text-sm flex gap-2 items-center"><DoorOpen size={15} />Login</a>
@@ -67,7 +65,7 @@ export default function RegisterPage() {
                         <span className="w-30 border-t"></span>
                     </div>
                     <div className="relative flex justify-center text-xs uppercase">
-                        <span className="btext-white px-2">{'>'} Ou continue com {'<'}</span>
+                        <span className="btext-white px-2">Ou continue com</span>
                     </div>
                     <div className="inset-0 flex items-center">
                         <span className="w-30 border-t"></span>
@@ -93,8 +91,8 @@ export default function RegisterPage() {
                             {errors.password && <p className="text-red-500 text-sm">{errors.password.message}</p>}
                         </fieldset>
 
-                        {error && <p className="text-red-500 text-sm">{error}</p>}
-
+                        <p className="text-red-500 text-sm">{error}</p>
+                        
                         <Button type="submit" variant={"secondary"} disabled={isSubmitting} className="btn btn-primary w-full">
                             {isSubmitting ? (<> <LoaderCircle /> Registrando... </>) : (<> <UserPlus /> Criar Conta</>)}
                         </Button>
