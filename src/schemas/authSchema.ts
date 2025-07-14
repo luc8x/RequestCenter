@@ -9,5 +9,7 @@ export const loginSchema = z.object({
 })
 
 export const registerSchema = loginSchema.extend({
-  name: z.string().min(3),
+  name: z.string().min(3).refine((val) => !/\d/.test(val), {
+      message: "O nome não pode conter números",
+    }),
 })
