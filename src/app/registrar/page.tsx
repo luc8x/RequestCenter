@@ -94,7 +94,7 @@ export default function RegisterPage() {
                         <p className="text-red-500 text-sm">{error}</p>
                         
                         <Button type="submit" variant={"secondary"} disabled={isSubmitting} className="btn btn-primary w-full">
-                            {isSubmitting ? (<> <LoaderCircle /> Registrando... </>) : (<> <UserPlus /> Criar Conta</>)}
+                            {isSubmitting ? (<> <LoaderCircle className="animate-spin" /> Registrando... </>) : (<> <UserPlus /> Criar Conta</>)}
                         </Button>
                     </form>
                 </div>

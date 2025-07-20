@@ -30,15 +30,11 @@ function Breadcrumb({ ...props }: React.ComponentProps<"nav">) {
       <nav aria-label="breadcrumb" data-slot="breadcrumb" {...props} />
       <div className="flex gap-2">
         <DropdownMenu>
-          <DropdownMenuTrigger className="flex gap-2 items-center p-1 px-2 bg-white rounded-2xl">
-            <Avatar>
-              <AvatarImage src="/user.png" />
-              <AvatarFallback>CN</AvatarFallback>
-            </Avatar>
+          <DropdownMenuTrigger className="p-1 px-2">
             <span className="rainbow-text font-semibold text-sm">{session.user?.name}</span>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuLabel>Minha conta</DropdownMenuLabel>
+            <DropdownMenuLabel>Conta</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })} className="text-red-500">Deslogar</DropdownMenuItem>
           </DropdownMenuContent>

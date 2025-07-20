@@ -49,22 +49,24 @@ export const columns = (
         };
 
         return (
-          <Dialog>
-            <DialogTrigger className="bg-red-500 p-1.5 rounded text-white cursor-pointer"><Trash2 className="h-4 w-4" /></DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Você tem certeza disso?</DialogTitle>
-                <DialogDescription>
-                  Realmente você deseja deletar essa solicitação
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <Button variant="destructive" size="sm" onClick={handleClick} className="cursor-pointer">
-                  <Trash2 className="h-4 w-4" /> Deletar
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <div className="flex justify-center">
+            <Dialog>
+              <DialogTrigger className="p-1.5 rounded text-red-500 cursor-pointer flex gap-2 items-center"><Trash2 className="h-4 w-4" /> Deletar</DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Você tem certeza disso?</DialogTitle>
+                  <DialogDescription>
+                    Realmente você deseja deletar essa solicitação
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <Button variant="destructive" size="sm" onClick={handleClick} className="cursor-pointer">
+                    <Trash2 className="h-4 w-4" /> Deletar
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
         );
       },
     },

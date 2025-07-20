@@ -25,8 +25,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Central - Painel",
-  description: "Central - Painel",
+  title: "Painel - Request Center",
+  description: "Request Center",
   icons: {
   }
 };
@@ -40,18 +40,19 @@ export default function RootDashboardLayout({
     <html lang="pt-BR">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        style={{ backgroundColor: "rgb(4, 13, 13)" }}
+        style={{ backgroundColor: "#242426" }}
       >
         <Toaster />
         <SidebarProvider>
           <AppSidebar />
-          <main className="bg-white p-5 w-full flex flex-col gap-5">
-            <div className="mb-2 p-1 bg-gray-100 rounded-2xl flex gap-2 items-center">
-              <SidebarTrigger />
+          <main className="p-5 w-full flex flex-col gap-5">
+            <div className="mb-2 p-1 px-2 bg-black/30 rounded-2xl flex gap-2 items-center">
+              <SidebarTrigger className="text-green-600" />
+              <span className="text-white">|</span>
               <Breadcrumb>
                 <BreadcrumbList>
                   <BreadcrumbItem>
-                    <BreadcrumbLink href="/dashboard">Início</BreadcrumbLink>
+                    <BreadcrumbLink href="/dashboard" className="text-green-600">Início</BreadcrumbLink>
                   </BreadcrumbItem>
                 </BreadcrumbList>
               </Breadcrumb>
