@@ -6,6 +6,7 @@ import { registerSchema } from "@/schemas/authSchema";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Image from 'next/image'
 
 // Componentes
 import { Input } from "@/components/ui/input";
@@ -54,10 +55,10 @@ export default function RegisterPage() {
                 <p className="mb-4 text-sm text-white">Insira as informações abaixo para criar sua conta.</p>
                 <div className="mb-5 flex justify-between gap-2">
                     <Button type="submit" variant={"secondary"} disabled={isSubmitting} className="btn btn-primary w-45">
-                        <img src={'google.png'}></img>Google
+                        <Image alt="Google" src={'/google.png'} width={20} height={20} />Google
                     </Button>
                     <Button type="submit" variant={"secondary"} disabled={isSubmitting} className="btn btn-primary w-45">
-                        <img src={'github.png'} width={20}></img>Github
+                        <Image alt="Github" src={'/github.png'} width={20} height={20} />Github
                     </Button>
                 </div>
                 <div className="flex">
@@ -92,7 +93,7 @@ export default function RegisterPage() {
                         </fieldset>
 
                         <p className="text-red-500 text-sm">{error}</p>
-                        
+
                         <Button type="submit" variant={"secondary"} disabled={isSubmitting} className="btn btn-primary w-full">
                             {isSubmitting ? (<> <LoaderCircle className="animate-spin" /> Registrando... </>) : (<> <UserPlus /> Criar Conta</>)}
                         </Button>

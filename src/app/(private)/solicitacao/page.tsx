@@ -1,154 +1,299 @@
 "use client";
 
+import React, { useEffect, useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";;
-import { createSolicitacaoSchema } from "@/schemas/solicitacaoSchema";
-import { z } from "zod";
-import { toast } from "sonner"
-import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
-// Componentes
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { DataTable } from "@/components/solicitacoes/minhasSolicitacoes/data-table";
-import { columns, Solicitacao } from "@/components/solicitacoes/minhasSolicitacoes/columns"
 import {
-    Dialog,
-    DialogContent,
-    DialogTrigger,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-    DialogClose,
-} from "@/components/ui/dialog"
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { EditSolicitacaoForm } from "@/components/solicitacoes/EditSolicitacaoForm";
+import { Solicitacao } from "@/components/solicitacoes/types";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-// Icons
-import { LoaderCircle } from 'lucide-react';
-import { BadgePlus } from 'lucide-react';
+import { LoaderCircle, Trash2, SquarePen, BadgePlus } from "lucide-react";
 
-type FormData = z.infer<typeof createSolicitacaoSchema>
+type FormValues = {
+  assunto: string;
+  descricao: string;
+};
 
 export default function SolicitacaoPage() {
-    const [data, setData] = useState<Solicitacao[]>([]);
-    const [error, setError] = useState("");
+  const [data, setData] = useState<Solicitacao[]>([]);
+  const [error, setError] = useState("");
+  const [solicitacaoEdit, setSolicitacaoEdit] = useState<Solicitacao | null>(null);
+  const [open, setOpen] = useState(false);
 
-    const { register, handleSubmit, formState: { errors, isSubmitting }, reset } = useForm<FormData>({
-        resolver: zodResolver(createSolicitacaoSchema),
-    });
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isSubmitting },
+  } = useForm<FormValues>({
+    mode: "onSubmit",
+  });
 
-    const fetchSolicitacoes = async () => {
-        const res = await fetch("/api/solicitacoes/minhasSolicitacoes");
-        const json = await res.json();
-        setData(json);
-    };
+  const fetchSolicitacoes = useCallback(async () => {
+    try {
+      const res = await fetch("/api/solicitacoes/solicitacoes");
+      if (!res.ok) throw new Error();
+      const json = await res.json();
+      setData(json);
+    } catch {
+      toast.error("Erro ao buscar solicitações.");
+    }
+  }, []);
 
-    useEffect(() => {
-        fetchSolicitacoes();
-    }, []);
+  useEffect(() => {
+    fetchSolicitacoes();
+  }, [fetchSolicitacoes]);
 
-    const handleDelete = async (id: string) => {
-        const res = await fetch(`/api/solicitacoes/${id}`, { method: "DELETE" });
-        if (res.ok) {
-            setData((prev) => prev.filter((item) => item.id !== id));
-            toast.success("Solicitação deletada.");
-        } else {
-            toast.error("Ocorreu algum erro ao deletar.");
-        }
-    };
+  const onSubmit = async (formData: FormValues) => {
+    setError("");
+    try {
+      const res = await fetch("/api/solicitacoes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
 
-    const onSubmit = async (formData: FormData) => {
-        setError("");
+      if (!res.ok) {
+        const err = await res.json();
+        toast.error(err.error || "Erro ao cadastrar solicitação.");
+        return;
+      }
 
-        const res = await fetch("/api/solicitacoes/createSolicitacao", {
-            method: "POST",
-            body: JSON.stringify(formData),
-            headers: { "Content-Type": "application/json" },
-        });
+      reset();
+      fetchSolicitacoes();
+      toast.success("Solicitação cadastrada.");
+    } catch {
+      toast.error("Erro na comunicação com o servidor.");
+    }
+  };
 
-        if (res.ok) {
-            reset();
-            fetchSolicitacoes();
-            toast.success("Solicitação cadastrada.");
-        } else {
-            const err = await res.json();
-            toast.error(err.message || "Ocorreu algum erro ao cadastrar.");
-        }
-    };
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`/api/solicitacoes/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      setData((prev) => prev.filter((item) => item.id !== id));
+      toast.success("Solicitação deletada.");
+    } catch {
+      toast.error("Erro ao deletar solicitação.");
+    }
+  };
 
-    return (
-        <div className="grid gap-4 grid-cols-1 justify-center ">
-            <div className="bg-black/30 rounded-lg shadow-lg p-6 border border-accent-foreground mx-70">
-                <div className="flex justify-between mb-2 items-start">
-                    <div className="flex flex-col mb-2">
-                        <h1 className="text-3xl font-semibold text-white">Minhas Solicitações</h1>
-                        <p className="text-sm text-white">Todas as suas solicitações apareceram abaixo.</p>
-                    </div>
+  const handleCloseEdit = () => {
+    setSolicitacaoEdit(null);
+    setOpen(false);
+    fetchSolicitacoes();
+  };
+
+  const mensagens = [
+    {
+      nome: "João",
+      mensagem: "Olá, podemos ver sua solicitação?",
+      avatar: "https://github.com/shadcn.png",
+    },
+    {
+      nome: "Lucas",
+      mensagem: "Bom dia, como posso lhe ajudar?",
+      avatar: "https://github.com/shadcn.png",
+    },
+  ];
+
+  return (
+    <div className="grid gap-4 grid-cols-4">
+      {/* Métricas */}
+      <section className="flex flex-col gap-4">
+        <div
+          className="rounded-lg shadow-lg p-5 border border-accent-foreground text-white"
+          style={{ backgroundColor: "#111313" }}
+        >
+          <h3 className="font-semibold mb-1">Solicitações</h3>
+          <p className="text-sm font-light mb-4">Métricas</p>
+          {/* Métricas aqui, se necessário */}
+        </div>
+      </section>
+
+      {/* Solicitações e Form */}
+      <section className="flex flex-col gap-4 col-span-2">
+        <div
+          className="rounded-lg shadow-lg p-5 border border-accent-foreground"
+          style={{ backgroundColor: "#111313" }}
+        >
+          <header className="flex justify-between items-center mb-4">
+            <h3 className="font-semibold text-white">Minhas Solicitações</h3>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="default" className="cursor-pointer">
+                  <BadgePlus />
+                  Nova Solicitação
+                </Button>
+              </DialogTrigger>
+
+              <DialogContent>
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                  <DialogHeader>
+                    <DialogTitle>Cadastrar Solicitação</DialogTitle>
+                  </DialogHeader>
+
+                  <fieldset className="flex flex-col gap-2">
+                    <Label htmlFor="assunto">Assunto</Label>
+                    <Input
+                      id="assunto"
+                      type="text"
+                      {...register("assunto", { required: "Assunto é obrigatório" })}
+                      placeholder="Assunto da solicitação"
+                      aria-invalid={errors.assunto ? "true" : "false"}
+                    />
+                    {errors.assunto && (
+                      <p role="alert" className="text-red-500 text-sm">
+                        {errors.assunto.message}
+                      </p>
+                    )}
+                  </fieldset>
+
+                  <fieldset className="flex flex-col gap-2">
+                    <Label htmlFor="descricao">Descrição</Label>
+                    <Textarea
+                      id="descricao"
+                      {...register("descricao", { required: "Descrição é obrigatória" })}
+                      placeholder="Descreva a solicitação"
+                      aria-invalid={errors.descricao ? "true" : "false"}
+                    />
+                    {errors.descricao && (
+                      <p role="alert" className="text-red-500 text-sm">
+                        {errors.descricao.message}
+                      </p>
+                    )}
+                  </fieldset>
+
+                  {error && <p className="text-red-500 text-sm">{error}</p>}
+
+                  <DialogFooter>
+                    <DialogClose asChild>
+                      <Button type="button" variant="outline">
+                        Fechar
+                      </Button>
+                    </DialogClose>
+                    <Button type="submit" variant="secondary" disabled={isSubmitting}>
+                      {isSubmitting ? (
+                        <>
+                          <LoaderCircle className="animate-spin" /> Registrando...
+                        </>
+                      ) : (
+                        <>
+                          <BadgePlus /> Cadastrar
+                        </>
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </header>
+
+          {/* Lista Solicitações */}
+          {data.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Nenhuma solicitação encontrada.</p>
+          ) : (
+            <div className="max-h-80 overflow-auto flex flex-col gap-4 pr-1">
+              {data.map((solicitacao) => (
+                <div
+                  key={solicitacao.id}
+                  className="rounded-xl p-5 bg-muted text-foreground flex justify-between gap-2"
+                >
+                  <div>
+                    <h3 className="text-lg font-semibold">{solicitacao.assunto}</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Prioridade: <span className="font-medium">{solicitacao.prioridade}</span>
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Status: <span className="font-medium">{solicitacao.status}</span>
+                    </p>
+                  </div>
+
+                  <div className="flex gap-2">
                     <Dialog>
-                        <DialogTrigger asChild>
-                            <Button variant="outlineGreen"><BadgePlus />Cadastrar Solicitação</Button>
-                        </DialogTrigger>
-
-                        <DialogContent>
-                            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                                <DialogHeader>
-                                    <DialogTitle>Cadastrar Solicitação</DialogTitle>
-                                </DialogHeader>
-
-                                <fieldset className="flex flex-col gap-2">
-                                    <Label>Assunto</Label>
-                                    <Input
-                                        type="text"
-                                        {...register("assunto")}
-                                        placeholder="Assunto da solicitação"
-                                    />
-                                    {errors.assunto && (
-                                        <p className="text-red-500 text-sm">{errors.assunto.message}</p>
-                                    )}
-                                </fieldset>
-
-                                <fieldset className="flex flex-col gap-2">
-                                    <Label>Descrição</Label>
-                                    <Textarea
-                                        {...register("descricao")}
-                                        placeholder="Descreva a solicitação"
-                                    />
-                                    {errors.descricao && (
-                                        <p className="text-red-500 text-sm">{errors.descricao.message}</p>
-                                    )}
-                                </fieldset>
-
-                                {error && <p className="text-red-500 text-sm">{error}</p>}
-
-                                <DialogFooter>
-                                    <DialogClose asChild>
-                                        <Button type="button" variant="outline">
-                                        Fechar
-                                        </Button>
-                                    </DialogClose>
-                                    <Button type="submit" variant="secondary" disabled={isSubmitting}>
-                                        {isSubmitting ? (
-                                            <>
-                                                <LoaderCircle className="animate-spin" />
-                                                Registrando...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <BadgePlus />
-                                                Cadastrar
-                                            </>
-                                        )}
-                                    </Button>
-                                </DialogFooter>
-                            </form>
-                        </DialogContent>
+                      <DialogTrigger className="p-1.5 rounded cursor-pointer flex items-center">
+                        <Trash2 className="h-4 w-4" />
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Confirmação</DialogTitle>
+                          <DialogDescription>Deseja deletar essa solicitação?</DialogDescription>
+                        </DialogHeader>
+                        <DialogFooter>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDelete(solicitacao.id)}
+                          >
+                            <Trash2 className="h-4 w-4" /> Deletar
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
                     </Dialog>
 
+                    <Dialog open={open && solicitacaoEdit?.id === solicitacao.id} onOpenChange={setOpen}>
+                      <DialogTrigger
+                        onClick={() => {
+                          setSolicitacaoEdit(solicitacao);
+                          setOpen(true);
+                        }}
+                        className="p-1.5 rounded cursor-pointer flex items-center"
+                      >
+                        <SquarePen className="h-4 w-4" />
+                      </DialogTrigger>
+
+                      <DialogContent>
+                        {solicitacaoEdit && (
+                          <EditSolicitacaoForm solicitacao={solicitacaoEdit} onClose={handleCloseEdit} />
+                        )}
+                      </DialogContent>
+                    </Dialog>
+                  </div>
                 </div>
-                
-                <DataTable columns={columns(handleDelete)} data={data} />
+              ))}
             </div>
+          )}
         </div>
-    );
+      </section>
+
+      {/* Chats */}
+      <section>
+        <div
+          className="rounded-lg shadow-lg p-5 border border-accent-foreground text-white"
+          style={{ backgroundColor: "#111313" }}
+        >
+          <h3 className="font-semibold mb-4">Chats</h3>
+          <div className="flex flex-col gap-5">
+            {mensagens.map((item, i) => (
+              <a key={i} href="#chat" className="flex items-center gap-5">
+                <Avatar>
+                  <AvatarImage src={item.avatar} />
+                  <AvatarFallback>{item.nome.slice(0, 2).toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <div className="flex flex-col leading-3">
+                  <span className="font-semibold text-lg">{item.nome}</span>
+                  <span className="text-sm font-light">{item.mensagem}</span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
 }
