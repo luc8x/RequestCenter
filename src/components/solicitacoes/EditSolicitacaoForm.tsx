@@ -59,7 +59,7 @@ export function EditSolicitacaoForm({ solicitacao, onClose }: { solicitacao: Sol
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
       <DialogHeader>
-        <DialogTitle>Editar Solicitação</DialogTitle>
+        <DialogTitle className="text-blue-500">Editar Solicitação</DialogTitle>
       </DialogHeader>
 
       <fieldset className="flex flex-col gap-2">

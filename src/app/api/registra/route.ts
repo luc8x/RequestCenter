@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ errors: parse.error.flatten() }, { status: 400 });
   }
 
-  const { name, email, password } = parse.data;
+  const { name, email, password, permissao } = parse.data;
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
 
@@ -26,6 +26,7 @@ export async function POST(req: Request) {
       name,
       email,
       password: hashedPassword,
+      permissao: permissao,
     },
   });
 

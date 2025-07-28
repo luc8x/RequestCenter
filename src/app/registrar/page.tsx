@@ -13,6 +13,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import ParticulasDotsBackground from "@/components/TSparticulasBackground";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 // Icons
 import { LoaderCircle } from 'lucide-react';
@@ -84,6 +91,19 @@ export default function RegisterPage() {
                             <Label>Email</Label>
                             <Input type="email" {...register("email")} className="input" required placeholder="exemplo@exemplo.com" />
                             {errors.email && <p className="text-red-500 text-sm">{errors.email.message}</p>}
+                        </fieldset>
+
+                        <fieldset className="flex flex-col gap-2">
+                            <Label>Permissões</Label>
+                            <Select name="permissao">
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Selecione sua permissão" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="SOLICITANTE">Solicitante</SelectItem>
+                                    <SelectItem value="ATENDENTE">Atendente</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </fieldset>
 
                         <fieldset className="flex flex-col gap-2">
