@@ -2,20 +2,20 @@ import { useForm } from "react-hook-form";
 import { Textarea } from "../ui/textarea";
 import { Label } from "../ui/label";
 import {
-    Dialog,
-    DialogContent,
-    DialogTrigger,
-    DialogHeader,
-    DialogTitle,
-    DialogFooter,
-    DialogClose,
-    DialogDescription,
+  Dialog,
+  DialogContent,
+  DialogTrigger,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+  DialogDescription,
 } from "@/components/ui/dialog"
 import React from "react";
 import { toast } from "sonner";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { LoaderCircle } from "lucide-react";
+import { BadgePlus, LoaderCircle } from "lucide-react";
 
 type FormValues = {
   assunto: string;
@@ -93,11 +93,12 @@ export function EditSolicitacaoForm({ solicitacao, onClose }: { solicitacao: Sol
         <Button type="submit" variant="secondary" disabled={isSubmitting}>
           {isSubmitting ? (
             <>
-              <LoaderCircle className="animate-spin" />
-              Atualizando...
+              <LoaderCircle className="animate-spin w-4 h-4 mr-1" /> Atualizando...
             </>
           ) : (
-            <>Salvar</>
+            <>
+              <BadgePlus className="w-4 h-4 mr-1" /> Salvar
+            </>
           )}
         </Button>
       </DialogFooter>

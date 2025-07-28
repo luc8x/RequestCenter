@@ -30,7 +30,7 @@ type FormValues = {
 };
 
 export default function SolicitacaoPage() {
-  const [data, setData] = useState<Solicitacao[]>([]);
+  const [dataSolicitacao, setData] = useState<Solicitacao[]>([]);
   const [error, setError] = useState("");
   const [solicitacaoEdit, setSolicitacaoEdit] = useState<Solicitacao | null>(null);
   const [open, setOpen] = useState(false);
@@ -62,7 +62,7 @@ export default function SolicitacaoPage() {
   const onSubmit = async (formData: FormValues) => {
     setError("");
     try {
-      const res = await fetch("/api/solicitacoes", {
+      const res = await fetch("/api/solicitacoes/solicitacoes/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -113,54 +113,42 @@ export default function SolicitacaoPage() {
   ];
 
   return (
-    <div className="grid gap-4 grid-cols-4">
+    <div className="grid gap-6 grid-cols-[1fr_2fr_1fr] text-gray-100">
       {/* Métricas */}
       <section className="flex flex-col gap-4">
-        <div
-          className="rounded-lg shadow-lg p-5 border border-accent-foreground text-white"
-          style={{ backgroundColor: "#111313" }}
-        >
-          <h3 className="font-semibold mb-1">Solicitações</h3>
-          <p className="text-sm font-light mb-4">Métricas</p>
-          {/* Métricas aqui, se necessário */}
+        <div className="rounded-xl p-5 bg-gray-800 border border-gray-700 shadow-lg">
+          <h3 className="font-semibold mb-1 text-blue-400">Solicitações</h3>
+          <p className="text-sm text-gray-400 mb-4">Métricas gerais do sistema</p>
+          {/* Coloque aqui seus KPIs, gráficos ou contadores */}
         </div>
       </section>
 
-      {/* Solicitações e Form */}
-      <section className="flex flex-col gap-4 col-span-2">
-        <div
-          className="rounded-lg shadow-lg p-5 border border-accent-foreground"
-          style={{ backgroundColor: "#111313" }}
-        >
+      {/* Solicitações e Formulário */}
+      <section className="flex flex-col gap-4 col-span-1">
+        <div className="rounded-xl p-5 bg-gray-800 border border-gray-700 shadow-lg">
           <header className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold text-white">Minhas Solicitações</h3>
+            <h3 className="font-semibold text-lg text-blue-400">Minhas Solicitações</h3>
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="default" className="cursor-pointer">
-                  <BadgePlus />
-                  Nova Solicitação
+                <Button variant="secondary" className="gap-2">
+                  <BadgePlus className="w-4 h-4" /> Nova
                 </Button>
               </DialogTrigger>
-
               <DialogContent>
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                   <DialogHeader>
-                    <DialogTitle>Cadastrar Solicitação</DialogTitle>
+                    <DialogTitle className="text-blue-500">Cadastrar Solicitação</DialogTitle>
                   </DialogHeader>
 
                   <fieldset className="flex flex-col gap-2">
                     <Label htmlFor="assunto">Assunto</Label>
                     <Input
                       id="assunto"
-                      type="text"
                       {...register("assunto", { required: "Assunto é obrigatório" })}
                       placeholder="Assunto da solicitação"
-                      aria-invalid={errors.assunto ? "true" : "false"}
                     />
                     {errors.assunto && (
-                      <p role="alert" className="text-red-500 text-sm">
-                        {errors.assunto.message}
-                      </p>
+                      <p className="text-red-500 text-sm">{errors.assunto.message}</p>
                     )}
                   </fieldset>
 
@@ -170,12 +158,9 @@ export default function SolicitacaoPage() {
                       id="descricao"
                       {...register("descricao", { required: "Descrição é obrigatória" })}
                       placeholder="Descreva a solicitação"
-                      aria-invalid={errors.descricao ? "true" : "false"}
                     />
                     {errors.descricao && (
-                      <p role="alert" className="text-red-500 text-sm">
-                        {errors.descricao.message}
-                      </p>
+                      <p className="text-red-500 text-sm">{errors.descricao.message}</p>
                     )}
                   </fieldset>
 
@@ -183,18 +168,16 @@ export default function SolicitacaoPage() {
 
                   <DialogFooter>
                     <DialogClose asChild>
-                      <Button type="button" variant="outline">
-                        Fechar
-                      </Button>
+                      <Button variant="ghost">Cancelar</Button>
                     </DialogClose>
-                    <Button type="submit" variant="secondary" disabled={isSubmitting}>
+                    <Button type="submit" disabled={isSubmitting}>
                       {isSubmitting ? (
                         <>
-                          <LoaderCircle className="animate-spin" /> Registrando...
+                          <LoaderCircle className="animate-spin w-4 h-4 mr-1" /> Registrando...
                         </>
                       ) : (
                         <>
-                          <BadgePlus /> Cadastrar
+                          <BadgePlus className="w-4 h-4 mr-1" /> Cadastrar
                         </>
                       )}
                     </Button>
@@ -204,42 +187,38 @@ export default function SolicitacaoPage() {
             </Dialog>
           </header>
 
-          {/* Lista Solicitações */}
-          {data.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhuma solicitação encontrada.</p>
+          {/* Lista */}
+          {dataSolicitacao.length === 0 ? (
+            <p className="text-sm text-gray-400">Nenhuma solicitação encontrada.</p>
           ) : (
             <div className="max-h-80 overflow-auto flex flex-col gap-4 pr-1">
-              {data.map((solicitacao) => (
+              {dataSolicitacao.map((solicitacao) => (
                 <div
                   key={solicitacao.id}
-                  className="rounded-xl p-5 bg-muted text-foreground flex justify-between gap-2"
+                  className="rounded-xl p-4 bg-gray-700 hover:bg-gray-600 transition-colors flex justify-between items-start"
                 >
                   <div>
-                    <h3 className="text-lg font-semibold">{solicitacao.assunto}</h3>
-                    <p className="text-sm text-muted-foreground">
+                    <h4 className="text-base font-semibold text-white">{solicitacao.assunto}</h4>
+                    <p className="text-sm text-gray-400">
                       Prioridade: <span className="font-medium">{solicitacao.prioridade}</span>
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-gray-400">
                       Status: <span className="font-medium">{solicitacao.status}</span>
                     </p>
                   </div>
 
                   <div className="flex gap-2">
                     <Dialog>
-                      <DialogTrigger className="p-1.5 rounded cursor-pointer flex items-center">
-                        <Trash2 className="h-4 w-4" />
+                      <DialogTrigger className="p-2 rounded hover:bg-gray-600 transition">
+                        <Trash2 className="h-4 w-4 text-red-400" />
                       </DialogTrigger>
                       <DialogContent>
                         <DialogHeader>
-                          <DialogTitle>Confirmação</DialogTitle>
-                          <DialogDescription>Deseja deletar essa solicitação?</DialogDescription>
+                          <DialogTitle>Confirmar exclusão</DialogTitle>
+                          <DialogDescription>Deseja realmente deletar esta solicitação?</DialogDescription>
                         </DialogHeader>
                         <DialogFooter>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDelete(solicitacao.id)}
-                          >
+                          <Button variant="destructive" onClick={() => handleDelete(solicitacao.id)}>
                             <Trash2 className="h-4 w-4" /> Deletar
                           </Button>
                         </DialogFooter>
@@ -252,11 +231,10 @@ export default function SolicitacaoPage() {
                           setSolicitacaoEdit(solicitacao);
                           setOpen(true);
                         }}
-                        className="p-1.5 rounded cursor-pointer flex items-center"
+                        className="p-2 rounded hover:bg-gray-600 transition"
                       >
-                        <SquarePen className="h-4 w-4" />
+                        <SquarePen className="h-4 w-4 text-blue-400" />
                       </DialogTrigger>
-
                       <DialogContent>
                         {solicitacaoEdit && (
                           <EditSolicitacaoForm solicitacao={solicitacaoEdit} onClose={handleCloseEdit} />
@@ -273,21 +251,18 @@ export default function SolicitacaoPage() {
 
       {/* Chats */}
       <section>
-        <div
-          className="rounded-lg shadow-lg p-5 border border-accent-foreground text-white"
-          style={{ backgroundColor: "#111313" }}
-        >
-          <h3 className="font-semibold mb-4">Chats</h3>
+        <div className="rounded-xl p-5 bg-gray-800 border border-gray-700 shadow-lg">
+          <h3 className="font-semibold mb-4 text-blue-400">Chats Recentes</h3>
           <div className="flex flex-col gap-5">
             {mensagens.map((item, i) => (
-              <a key={i} href="#chat" className="flex items-center gap-5">
+              <a key={i} href="#chat" className="flex items-center gap-4 hover:bg-gray-700 p-2 rounded transition">
                 <Avatar>
                   <AvatarImage src={item.avatar} />
                   <AvatarFallback>{item.nome.slice(0, 2).toUpperCase()}</AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col leading-3">
-                  <span className="font-semibold text-lg">{item.nome}</span>
-                  <span className="text-sm font-light">{item.mensagem}</span>
+                <div className="flex flex-col leading-5">
+                  <span className="font-medium">{item.nome}</span>
+                  <span className="text-sm text-gray-400">{item.mensagem}</span>
                 </div>
               </a>
             ))}
@@ -295,5 +270,6 @@ export default function SolicitacaoPage() {
         </div>
       </section>
     </div>
+
   );
 }

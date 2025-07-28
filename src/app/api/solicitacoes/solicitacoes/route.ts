@@ -6,7 +6,7 @@ import { authOptions } from "@/lib/auth";
 export async function POST(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id || session.user.permissao !== "SOLICITANTE") {
-    return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
+    return NextResponse.json({ error: `Vocé não está autorizado. ${session.user.permissao}` }, { status: 403 });
   }
 
   const { assunto, descricao, prioridade } = await req.json();
