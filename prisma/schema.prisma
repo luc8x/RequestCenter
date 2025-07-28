@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(uuid())
+  name      String
+  email     String    @unique
+  password  String
+  createdAt DateTime  @default(now())
+  permissao Permissao @default(SOLICITANTE)
+
+  solicitacoes Solicitacao[] @relation("Solicitante")
+  atendimentos Solicitacao[] @relation("Atendente")
+}
+
+model Solicitacao {
+  id          Int        @id @default(autoincrement())
+  assunto     String     @db.VarChar(255)
+  descricao   String
+  prioridade  Prioridade @default(NAO_INFORMADA)
+  status      Status     @default(ABERTA)
+  userId      String
+  atendenteId String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  user      User  @relation("Solicitante", fields: [userId], references: [id])
+  atendente User? @relation("Atendente", fields: [atendenteId], references: [id])
+}
+
+enum Prioridade {
+  BAIXA
+  MEDIA
+  ALTA
+  CRITICA
+  NAO_INFORMADA
+}
+
+enum Permissao {
+  SOLICITANTE
+  ATENDENTE
+}
+
+enum Status {
+  ABERTA
+  EM_ATENDIMENTO
+  FINALIZADA
+  CANCELADA
+}

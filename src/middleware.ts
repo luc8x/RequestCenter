@@ -4,16 +4,16 @@ import type { NextRequest } from "next/server";
 
 export async function middleware(req: NextRequest) {
   const token = await getToken({ req });
-  const isAutenticado = !!token;
+  const isAuthenticated = Boolean(token);
   const { pathname } = req.nextUrl;
 
-  if (!isAutenticado && pathname.startsWith("/dashboard")) {
+  if (!isAuthenticated && pathname.startsWith("/dashboard")) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
   if (
-    isAutenticado &&
-    (pathname.startsWith("/login") || pathname.startsWith("/registrar"))
+    isAuthenticated &&
+    (pathname === "/login" || pathname === "/registrar")
   ) {
     return NextResponse.redirect(new URL("/dashboard", req.url));
   }
@@ -24,12 +24,12 @@ export async function middleware(req: NextRequest) {
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
+     * Aplica middleware em todas as rotas, exceto:
+     * - /api/*
+     * - /_next/static/*
+     * - /_next/image/*
+     * - /favicon.ico
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
   ],
-}
+};

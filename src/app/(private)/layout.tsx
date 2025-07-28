@@ -4,15 +4,10 @@ import { Providers } from "@/lib/providers";
 import "../globals.css";
 
 // componentes
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
-import { AppSidebar } from "@/components/app-sidebar"
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-} from "@/components/ui/breadcrumb"
+import { SidebarProvider } from "@/components/ui/sidebar"
+import { AppSidebar } from "@/components/app-sidebar";
 import { Toaster } from "sonner";
+import { Conta } from "@/components/conta";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,26 +31,19 @@ export default function RootDashboardLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
+
   return (
     <html lang="pt-BR">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        style={{ backgroundColor: "#242426" }}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Toaster />
         <SidebarProvider>
           <AppSidebar />
-          <main className="p-5 w-full flex flex-col gap-5">
-            <div className="mb-2 p-1 px-2 bg-black/30 rounded-2xl flex gap-2 items-center">
-              <SidebarTrigger className="text-green-600" />
-              <span className="text-white">|</span>
-              <Breadcrumb>
-                <BreadcrumbList>
-                  <BreadcrumbItem>
-                    <BreadcrumbLink href="/dashboard" className="text-green-600">Início</BreadcrumbLink>
-                  </BreadcrumbItem>
-                </BreadcrumbList>
-              </Breadcrumb>
+          <main className="p-5 w-full flex flex-col gap-4" style={{ backgroundColor: "#000100" }}>
+            <div className="p-1 px-4 rounded-2xl flex gap-2 items-center">
+              <div className="flex justify-between w-full items-center">
+                <Conta/>
+              </div>
             </div>
             <Providers>{children}</Providers>
           </main>
