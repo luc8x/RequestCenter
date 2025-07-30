@@ -33,38 +33,29 @@ export async function POST(req: Request) {
   return NextResponse.json(novaSolicitacao, { status: 201 });
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
+
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  // Para solicitante, lista só as próprias solicitações
-  // Para atendente, pode listar todas ou só as atribuídas
-  // Aqui exemplo simples: lista todas para atendente, só as próprias para solicitante
+  const fieldsParam = req.nextUrl.searchParams.get("fields"); 
+  const fields = fieldsParam?.split(",") ?? [];
 
-  const userId = session.user.id;
-  const userPermissao = session.user.permissao; // suposição que veio no session
+  const select = fields.reduce((acc, field) => {
+    acc[field] = true;
+    return acc;
+  }, {} as Record<string, boolean>);
 
-  let solicitacoes;
-
-  if (userPermissao === "ATENDENTE") {
-    solicitacoes = await prisma.solicitacao.findMany({
-      orderBy: { createdAt: "desc" },
-      include: {
-        user: true,
-        atendente: true,
-      },
-    });
-  } else {
-    solicitacoes = await prisma.solicitacao.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-      include: {
-        atendente: true,
-      },
-    });
+  if (fields.length === 0) {
+    return NextResponse.json({ error: "Nenhum campo solicitado." }, { status: 400 });
   }
+
+  const solicitacoes = await prisma.solicitacao.findMany({
+    where: { userId: session.user.id },
+    select
+  });
 
   return NextResponse.json(solicitacoes);
 }

@@ -18,6 +18,9 @@ import {
   DialogClose,
   DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  Card,
+} from "@/components/ui/card";
 import { EditSolicitacaoForm } from "@/components/solicitacoes/EditSolicitacaoForm";
 import { Solicitacao } from "@/components/solicitacoes/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -251,11 +254,11 @@ export default function SolicitacaoPage() {
 
       {/* Chats */}
       <section>
-        <div className="rounded-xl p-5 bg-gray-800 border border-gray-700 shadow-lg">
+        <Card>
           <h3 className="font-semibold mb-4 text-blue-400">Chats Recentes</h3>
           <div className="flex flex-col gap-5">
             {mensagens.map((item, i) => (
-              <a key={i} href="#chat" className="flex items-center gap-4 hover:bg-gray-700 p-2 rounded transition">
+              <a key={i} href={`/chat/${i+1}/`} className="flex items-center gap-4 hover:bg-gray-700 p-2 rounded transition">
                 <Avatar>
                   <AvatarImage src={item.avatar} />
                   <AvatarFallback>{item.nome.slice(0, 2).toUpperCase()}</AvatarFallback>
@@ -267,7 +270,7 @@ export default function SolicitacaoPage() {
               </a>
             ))}
           </div>
-        </div>
+        </Card>
       </section>
     </div>
 

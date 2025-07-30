@@ -39,7 +39,7 @@ export function EditSolicitacaoForm({ solicitacao, onClose }: { solicitacao: Sol
 
   const onSubmit = async (data: FormValues) => {
     try {
-      const res = await fetch(`/api/solicitacoes/${solicitacao.id}`, {
+      const res = await fetch(`/api/solicitacao/${solicitacao.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),

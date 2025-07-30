@@ -24,12 +24,14 @@ const items = [
   },
   {
     title: "Solicitações",
-    url: "/solicitacao",
+    url: "/MinhasSolicitacoes",
     icon: Inbox,
   },
 ]
 
 export function AppSidebar() {
+  
+
   return (
     <Sidebar className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white shadow-lg">
       <SidebarHeader className="p-4 border-b border-gray-700">

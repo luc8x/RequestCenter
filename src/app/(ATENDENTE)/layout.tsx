@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Painel - Request Center",
+  title: "Request Center",
   description: "Request Center",
   icons: {
   }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
+import { prisma } from "@/lib/prisma";
 import { authOptions } from "@/lib/auth";
 
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
@@ -22,7 +22,6 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
   const userId = session.user.id;
   const permissao = session.user.permissao;
 
-  // Só solicitante pode deletar a própria solicitação
   if (solicitacaoAtual.userId !== userId) {
     return NextResponse.json({ error: "Sem permissão para deletar" }, { status: 403 });
   }
@@ -58,29 +57,26 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     return NextResponse.json({ error: "Solicitação não encontrada" }, { status: 404 });
   }
 
-  // Controle de acesso: só o solicitante, atendente ou admins podem ver
   const userId = session.user.id;
   const permissao = session.user.permissao;
 
-  const podeAcessar =
-    solicitacao.userId === userId ||
-    solicitacao.atendenteId === userId ||
-    permissao === "ATENDENTE"; // ou ajuste para admin se existir
-
-  if (!podeAcessar) {
+  if (solicitacao.userId !== userId || solicitacao.atendenteId !== userId || permissao !== "ATENDENTE") {
     return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
 
   return NextResponse.json(solicitacao);
 }
 
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  const id = Number(params.id);
+  const { pathname } = req.nextUrl;
+  const idString = pathname.split("/").pop();
+  const id = Number(idString);
+
   if (isNaN(id)) {
     return NextResponse.json({ error: "ID inválido" }, { status: 400 });
   }
@@ -88,7 +84,6 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   const data = await req.json();
   const { assunto, descricao, prioridade, status, atendenteId } = data;
 
-  // Validação enums:
   const prioridadesValidas = ["BAIXA", "MEDIA", "ALTA", "CRITICA", "NAO_INFORMADA"];
   const statusValidos = ["ABERTA", "EM_ATENDIMENTO", "FINALIZADA", "CANCELADA"];
 
@@ -107,20 +102,16 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   const userId = session.user.id;
   const permissao = session.user.permissao;
 
-  // Somente solicitante pode atualizar assunto, descricao e prioridade
-  // Atendente pode atualizar status e atendenteId (assumir atendimento)
-  // Ajuste a regra conforme sua necessidade
-
   if (
-    (assunto || descricao || prioridade) && solicitacaoAtual.userId !== userId
+    (assunto || descricao) && solicitacaoAtual.userId !== userId
   ) {
     return NextResponse.json({ error: "Somente o solicitante pode alterar esses campos" }, { status: 403 });
   }
 
   if (
-    (status || atendenteId) && permissao !== "ATENDENTE"
+    (status || atendenteId || prioridade) && permissao !== "ATENDENTE"
   ) {
-    return NextResponse.json({ error: "Somente atendente pode alterar status ou assumir solicitação" }, { status: 403 });
+    return NextResponse.json({ error: "Somente atendente pode alterar status, prioridade ou assumir solicitação" }, { status: 403 });
   }
 
   try {
