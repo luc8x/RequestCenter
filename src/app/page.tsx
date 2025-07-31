@@ -15,11 +15,11 @@ export default function Home() {
 
       <main className="py-30">
         <section className="text-center px-6">
-          <h2 className="text-4xl font-extrabold mb-4 text-white">Bem-vindo à sua central unificada</h2>
+          <h2 className="text-4xl font-extrabold mb-4 text-white">Bem-vindo à Request Center</h2>
           <p className="text-lg text-white max-w-xl mx-auto">Aqui você pode registrar, acompanhar e gerenciar todas as suas solicitações com agilidade e transparência.</p>
           <div className="mt-10 flex justify-center space-x-4">
-            <a href="/solicitacoes/nova" className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-medium">Abrir Solicitação</a>
-            <a href="/solicitacoes" className="px-6 py-3 bg-gray-200 text-white rounded-xl hover:bg-gray-300 transition font-medium">Consultar</a>
+            <a href="/login" className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-medium">Login</a>
+            <a href="/solicitacoes" className="px-6 py-3 bg-gray-800 text-white rounded-xl hover:bg-gray-900 transition font-medium">Consultar</a>
           </div>
         </section>
 

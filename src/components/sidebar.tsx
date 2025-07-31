@@ -1,5 +1,7 @@
 import Image from 'next/image'
-
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
 import { Home, Inbox } from "lucide-react"
 
 import {
@@ -15,23 +17,38 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 
-// Menu items.
-const items = [
-  {
-    title: "Início",
-    url: "/inicio",
-    icon: Home,
-  },
-  {
-    title: "Solicitações",
-    url: "/MinhasSolicitacoes",
-    icon: Inbox,
-  },
-]
+export async function AppSidebar() {
+  const session = await getServerSession(authOptions);
+  let items = []
+  if (session.user.permissao !== "SOLICITANTE") {
+    items = [
+    {
+      title: "Dashboard",
+      url: "/dashboard",
+      icon: Home,
+    },
+    {
+      title: "Solicitações",
+      url: "/solicitacoes",
+      icon: Inbox,
+    },
+  ]
+  } else {
+    items = [
+      {
+        title: "Início",
+        url: "/inicio",
+        icon: Home,
+      },
+      {
+        title: "Solicitações",
+        url: "/MinhasSolicitacoes",
+        icon: Inbox,
+      },
+    ]
+  }
 
-export function AppSidebar() {
-  
-
+    
   return (
     <Sidebar className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white shadow-lg">
       <SidebarHeader className="p-4 border-b border-gray-700">

@@ -11,15 +11,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-interface ContaProps {
-session: {
-    user?: {
-        name?: string;
-        email?: string;
-    };
-};
-}
-
 export function Conta() {
 const { data: session } = useSession();
 

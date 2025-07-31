@@ -20,7 +20,6 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Card } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton"
 import { EditSolicitacaoForm } from "@/components/solicitacoes/EditSolicitacaoForm";
 import { Solicitacao } from "@/components/solicitacoes/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";

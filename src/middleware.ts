@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function middleware(req: NextRequest) {
+  
   const token = await getToken({ req });
   const isAuthenticated = Boolean(token);
   const { pathname } = req.nextUrl;
@@ -15,7 +16,7 @@ export async function middleware(req: NextRequest) {
     isAuthenticated &&
     (pathname === "/login" || pathname === "/registrar")
   ) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+    return NextResponse.redirect(new URL("/inicio", req.url));
   }
 
   return NextResponse.next();

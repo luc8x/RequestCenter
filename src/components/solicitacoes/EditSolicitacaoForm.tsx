@@ -2,14 +2,10 @@ import { useForm } from "react-hook-form";
 import { Textarea } from "../ui/textarea";
 import { Label } from "../ui/label";
 import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
   DialogHeader,
   DialogTitle,
   DialogFooter,
   DialogClose,
-  DialogDescription,
 } from "@/components/ui/dialog"
 import React from "react";
 import { toast } from "sonner";

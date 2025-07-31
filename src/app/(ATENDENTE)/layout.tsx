@@ -1,24 +1,16 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import { redirect } from "next/navigation";
 import { Providers } from "@/lib/providers";
 import "../globals.css";
 
 // componentes
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/sidebar";
-import { Toaster } from "sonner";
 import { Conta } from "@/components/conta";
+import { Toaster } from "sonner";
 import { LoadingWrapper } from "@/components/LoadingWrapper";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Request Center",
@@ -27,12 +19,22 @@ export const metadata: Metadata = {
   }
 };
 
-export default function RootDashboardLayout({ children }: { children: React.ReactNode }) {
+export default async function RootDashboardLayout({ children }: { children: React.ReactNode }) {
+
+  const session = await getServerSession(authOptions);
+
+  if (!session) {
+    return redirect("/login");
+  }
+
+  if (session.user.permissao !== "ATENDENTE") {
+    return redirect("/403");
+  }
+
   return (
     <html lang="pt-BR">
       <body className="bg-gray-900 antialiased">
         <LoadingWrapper>
-          {/* Conteúdo da aplicação aqui */}
           <SidebarProvider>
             <AppSidebar />
             <main className="p-5 w-full flex flex-col gap-4 bg-gradient-to-b from-gray-900 to-gray-800">
@@ -45,6 +47,7 @@ export default function RootDashboardLayout({ children }: { children: React.Reac
             </main>
           </SidebarProvider>
         </LoadingWrapper>
+        <Toaster richColors />
       </body>
     </html>
   );
