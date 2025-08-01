@@ -11,18 +11,19 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-  DialogClose,
   DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Card,
 } from "@/components/ui/card";
 import { Solicitacao } from "@/components/solicitacoes/types";
-import { AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { MessageSquareShare  } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { MessageSquareShare } from "lucide-react";
 export default function SolicitacaoPage() {
   const [dataSolicitacao, setData] = useState<Solicitacao[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingChat, setLoadingChat] = useState(true);
+  const [dataChat, setDataChat] = useState([]);
 
   const fetchSolicitacoes = useCallback(async () => {
     try {
@@ -48,9 +49,32 @@ export default function SolicitacaoPage() {
     }
   }, []);
 
+  const fetchChats = useCallback(async () => {
+    try {
+      setLoadingChat(true);
+
+      const res = await fetch("/api/solicitacao/chats", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) throw new Error();
+
+      const json = await res.json();
+      setDataChat(json);
+    } catch {
+      toast.error("Erro ao buscar chats.");
+    } finally {
+      setLoadingChat(false);
+    }
+  }, []);
+
   useEffect(() => {
     fetchSolicitacoes();
-  }, [fetchSolicitacoes]);
+    fetchChats();
+  }, [fetchSolicitacoes, fetchChats]);
 
   const router = useRouter();
 
@@ -75,21 +99,8 @@ export default function SolicitacaoPage() {
     }
   };
 
-  const mensagens = [
-    // {
-    //   nome: "João",
-    //   mensagem: "Olá, podemos ver sua solicitação?",
-    //   avatar: "https://github.com/shadcn.png",
-    // },
-    // {
-    //   nome: "Lucas",
-    //   mensagem: "Bom dia, como posso lhe ajudar?",
-    //   avatar: "https://github.com/shadcn.png",
-    // },
-  ];
-
   return (
-    <div className={`grid gap-6 ${mensagens && mensagens.length > 0 ? 'grid-cols-[1fr_2fr_1fr]' : 'grid-cols-[2fr_2fr]'} text-gray-100`}>
+    <div className={`grid gap-6 grid-cols-[1fr_2fr_1fr] text-gray-100`}>
       {/* Métricas */}
       <section className='flex flex-col gap-4 col-span-1'>
         <div className="rounded-xl p-5 bg-gray-800 border border-gray-700 shadow-lg">
@@ -111,7 +122,7 @@ export default function SolicitacaoPage() {
           {loading ? (
             <div className="max-h-80 overflow-auto flex flex-col gap-4 pr-1">
               {[...Array(3)].map((_, i) => (
-                <div className="rounded-xl p-4 bg-gray-700 animate-pulse flex justify-between items-start">
+                <div key={i} className="rounded-xl p-4 bg-gray-700 animate-pulse flex justify-between items-start">
                   <div className="space-y-2 w-full">
                     <div className="h-4 bg-gray-500 rounded w-1/3" />
                     <div className="h-3 bg-gray-600 rounded w-1/2" />
@@ -182,34 +193,62 @@ export default function SolicitacaoPage() {
       </section>
 
       {/* Chats */}
-      {mensagens && mensagens.length > 0 ? (
-        <section>
+      <section>
+      {loadingChat ? (
           <Card>
             <h3 className="font-semibold mb-4 text-blue-400">Chats em Andamento</h3>
             <div className="flex flex-col gap-5">
-              {mensagens.map((item) => (
-                <a
-                  key={item.id}
-                  href={`/chat/${item.id}/`}
-                  className="flex items-center gap-4 hover:bg-gray-700 p-2 rounded transition"
-                >
-                  <Avatar>
-                    <AvatarImage src={item.avatar} />
-                    <AvatarFallback>
-                      {item.nome?.slice(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col leading-5">
-                    <span className="font-medium">{item.nome}</span>
-                    <span className="text-sm text-gray-400">{item.mensagem}</span>
+              <div className="max-h-80 overflow-auto flex flex-col gap-4 pr-1">
+                {[...Array(3)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="rounded-xl p-4 bg-gray-700 animate-pulse flex justify-between items-start"
+                  >
+                    <div className="space-y-2 w-full">
+                      <div className="h-4 bg-gray-500 rounded w-1/3" />
+                      <div className="h-3 bg-gray-600 rounded w-1/2" />
+                      <div className="h-3 bg-gray-600 rounded w-1/4" />
+                    </div>
                   </div>
-                </a>
+                ))}
+              </div>
+            </div>
+          </Card>
+
+      ) : dataChat.length > 0 ? (
+          <Card>
+            <h3 className="font-semibold mb-4 text-blue-400">Chats em Andamento</h3>
+            <div className="max-h-80 overflow-auto flex flex-col gap-4 pr-1">
+              {dataChat.map((item) => (
+                <div key={item.id} className="flex flex-col gap-5 rounded-xl p-4 bg-gray-700 hover:bg-gray-600 transition-colors cursor-pointer">
+                  <a
+                    key={item.id}
+                    href={`/atendimento/${item.id}/`}
+                    className="flex items-start gap-2 flex-col"
+                  >
+                    <span><strong>{item.assunto}</strong></span>
+                    <div className="flex gap-4">
+                      <Avatar>
+                        <AvatarImage src={item.avatar} />
+                        <AvatarFallback>
+                          {item.name?.slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col leading-5">
+                        <span className="font-medium">{item.name}</span>
+                        <span className="text-sm text-gray-400">{item.mensagem}</span>
+                      </div>
+                    </div>
+                  </a>
+                </div>
               ))}
             </div>
           </Card>
-        </section>
-      ) : null}
+      ) : (
+        <p className="text-gray-400 text-sm">Nenhum chat em andamento.</p>
+      )}
 
+        </section>
     </div>
 
   );

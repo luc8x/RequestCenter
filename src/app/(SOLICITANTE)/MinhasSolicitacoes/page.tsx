@@ -37,6 +37,8 @@ export default function SolicitacaoPage() {
   const [error, setError] = useState("");
   const [solicitacaoEdit, setSolicitacaoEdit] = useState<Solicitacao | null>(null);
   const [open, setOpen] = useState(false);
+  const [loadingChat, setLoadingChat] = useState(true);
+  const [dataChat, setDataChat] = useState([]);
 
   const {
     register,
@@ -71,9 +73,32 @@ export default function SolicitacaoPage() {
     }
   }, []);
 
-  useEffect(() => {
-    fetchSolicitacoes();
-  }, [fetchSolicitacoes]);
+  const fetchChats = useCallback(async () => {
+      try {
+        setLoadingChat(true);
+  
+        const res = await fetch("/api/solicitacao/chats", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+  
+        if (!res.ok) throw new Error();
+  
+        const json = await res.json();
+        setDataChat(json);
+      } catch {
+        toast.error("Erro ao buscar chats.");
+      } finally {
+        setLoadingChat(false);
+      }
+    }, []);
+  
+    useEffect(() => {
+      fetchSolicitacoes();
+      fetchChats();
+    }, [fetchSolicitacoes, fetchChats]);
 
   const onSubmit = async (formData: FormValues) => {
     setError("");
@@ -283,23 +308,59 @@ export default function SolicitacaoPage() {
 
       {/* Chats */}
       <section>
-        <Card>
-          <h3 className="font-semibold mb-4 text-blue-400">Chats Recentes</h3>
-          <div className="flex flex-col gap-5">
-            {mensagens.map((item, i) => (
-              <a key={i} href={`/chat/${i + 1}/`} className="flex items-center gap-4 hover:bg-gray-700 p-2 rounded transition">
-                <Avatar>
-                  <AvatarImage src={item.avatar} />
-                  <AvatarFallback>{item.nome.slice(0, 2).toUpperCase()}</AvatarFallback>
-                </Avatar>
-                <div className="flex flex-col leading-5">
-                  <span className="font-medium">{item.nome}</span>
-                  <span className="text-sm text-gray-400">{item.mensagem}</span>
+      {loadingChat ? (
+          <Card>
+            <h3 className="font-semibold mb-4 text-blue-400">Chat recente</h3>
+            <div className="flex flex-col gap-5">
+              <div className="max-h-80 overflow-auto flex flex-col gap-4 pr-1">
+                {[...Array(3)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="rounded-xl p-4 bg-gray-700 animate-pulse flex justify-between items-start"
+                  >
+                    <div className="space-y-2 w-full">
+                      <div className="h-4 bg-gray-500 rounded w-1/3" />
+                      <div className="h-3 bg-gray-600 rounded w-1/2" />
+                      <div className="h-3 bg-gray-600 rounded w-1/4" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </Card>
+
+      ) : dataChat.length > 0 ? (
+          <Card>
+            <h3 className="font-semibold mb-4 text-blue-400">Chat recente</h3>
+            <div className="max-h-80 overflow-auto flex flex-col gap-4 pr-1">
+              {dataChat.map((item) => (
+                <div key={item.id} className="flex flex-col gap-5 rounded-xl p-4 bg-gray-700 hover:bg-gray-600 transition-colors cursor-pointer">
+                  <a
+                    key={item.id}
+                    href={`/chat/${item.id}/`}
+                    className="flex items-start gap-2 flex-col"
+                  >
+                    <span><strong>{item.assunto}</strong></span>
+                    <div className="flex gap-4">
+                      <Avatar>
+                        <AvatarImage src={item.avatar} />
+                        <AvatarFallback>
+                          {item.name?.slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col leading-5">
+                        <span className="font-medium">{item.name}</span>
+                        <span className="text-sm text-gray-400">{item.mensagem}</span>
+                      </div>
+                    </div>
+                  </a>
                 </div>
-              </a>
-            ))}
-          </div>
-        </Card>
+              ))}
+            </div>
+          </Card>
+      ) : (
+        <p className="text-gray-400 text-sm">Nenhum chat em andamento.</p>
+      )}
       </section>
     </div>
 
