@@ -37,7 +37,7 @@ export default function LoginPage() {
     const res = await signIn("credentials", {
       email: data.email,
       password: data.password,
-      redirect: false,
+      redirect: true,
     });
 
     if (res?.ok) {
@@ -50,12 +50,12 @@ export default function LoginPage() {
   return (
     <div className="relative min-h-screen flex items-center justify-center">
       <ParticulasDotsBackground />
-      <section className="bg-white/10 backdrop-blur rounded-lg shadow-lg p-6 border border-white text-white w-full max-w-md">
+      <section className="bg-white/10 backdrop-blur rounded-lg shadow-lg p-6 border border-blue-300 text-white w-full max-w-md">
         <header className="flex justify-between mb-4">
           <h1 className="text-3xl font-semibold">Login</h1>
           <a
             href="/registrar"
-            className="text-sm flex gap-2 items-center hover:underline"
+            className="text-sm flex gap-2 items-center hover:underline text-blue-300"
             aria-label="Cadastrar-se"
           >
             <UserPlus size={15} /> Cadastrar-se

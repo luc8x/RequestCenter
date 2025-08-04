@@ -13,13 +13,6 @@ export default function InicioPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const getGreeting = () => {
-    const hour = time.getHours();
-    if (hour < 12) return "Bom dia";
-    if (hour < 18) return "Boa tarde";
-    return "Boa noite";
-  };
-
   return (
       <section
         className="bg-gray-800 rounded-xl p-8 shadow-xl transform transition-all duration-700 ease-in-out opacity-0 animate-fadeInUp"

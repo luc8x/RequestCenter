@@ -136,7 +136,7 @@ export default function SolicitacaoPage() {
           ) : (
             <div className="max-h-80 overflow-auto flex flex-col gap-4 pr-1">
               {dataSolicitacao.map((solicitacao) => (
-                <Dialog>
+                <Dialog key={solicitacao.id}>
                   <DialogTrigger asChild>
                     <div
                       key={solicitacao.id}

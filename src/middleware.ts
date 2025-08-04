@@ -3,20 +3,26 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 export async function middleware(req: NextRequest) {
-  
   const token = await getToken({ req });
-  const isAuthenticated = Boolean(token);
+  const permissao = token?.permissao ?? "";
+  const isAutenticado = Boolean(token);
   const { pathname } = req.nextUrl;
 
-  if (!isAuthenticated && pathname.startsWith("/dashboard")) {
+  const isAuthPage = pathname === "/login" || pathname === "/registrar";
+
+  if (!isAutenticado && !isAuthPage) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  if (
-    isAuthenticated &&
-    (pathname === "/login" || pathname === "/registrar")
-  ) {
-    return NextResponse.redirect(new URL("/inicio", req.url));
+  console.log(permissao)
+
+  if (isAutenticado && isAuthPage) {
+    if (permissao === "SOLICITANTE") {
+      return NextResponse.redirect(new URL("/inicio", req.url));
+    }
+    if (permissao === "ATENDENTE") {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
   }
 
   return NextResponse.next();
@@ -24,13 +30,6 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Aplica middleware em todas as rotas, exceto:
-     * - /api/*
-     * - /_next/static/*
-     * - /_next/image/*
-     * - /favicon.ico
-     */
     "/((?!api|_next/static|_next/image|favicon.ico).*)",
   ],
 };

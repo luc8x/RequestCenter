@@ -140,19 +140,6 @@ export default function SolicitacaoPage() {
     fetchSolicitacoes();
   };
 
-  const mensagens = [
-    {
-      nome: "João",
-      mensagem: "Olá, podemos ver sua solicitação?",
-      avatar: "https://github.com/shadcn.png",
-    },
-    {
-      nome: "Lucas",
-      mensagem: "Bom dia, como posso lhe ajudar?",
-      avatar: "https://github.com/shadcn.png",
-    },
-  ];
-
   return (
     <div className="grid gap-6 grid-cols-[1fr_2fr_1fr] text-gray-100">
       {/* Métricas */}
@@ -231,8 +218,8 @@ export default function SolicitacaoPage() {
           {/* Lista */}
           {loading ? (
             <div className="max-h-80 overflow-auto flex flex-col gap-4 pr-1">
-              {[...Array(3)].map((_, i) => (
-                <div className="rounded-xl p-4 bg-gray-700 animate-pulse flex justify-between items-start">
+              {[...Array(3)].map((i) => (
+                <div key={i} className="rounded-xl p-4 bg-gray-700 animate-pulse flex justify-between items-start">
                   <div className="space-y-2 w-full">
                     <div className="h-4 bg-gray-500 rounded w-1/3" />
                     <div className="h-3 bg-gray-600 rounded w-1/2" />
@@ -246,7 +233,7 @@ export default function SolicitacaoPage() {
               ))}
             </div>
           ) : dataSolicitacao.length === 0 ? (
-            <p className="text-sm text-gray-400">Nenhuma solicitação encontrada.</p>
+            <p key={0} className="text-sm text-gray-400">Nenhuma solicitação encontrada.</p>
           ) : (
             <div className="max-h-80 overflow-auto flex flex-col gap-4 pr-1">
               {dataSolicitacao.map((solicitacao) => (

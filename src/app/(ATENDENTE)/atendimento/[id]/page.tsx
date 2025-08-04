@@ -1,9 +1,11 @@
 "use client";
 
 import { useSession } from "next-auth/react";
+import { useCallback } from "react";
 import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   Card,
   CardHeader,
@@ -16,19 +18,58 @@ import { cn } from "@/lib/utils";
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
 import { Send } from 'lucide-react';
+import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { io, Socket } from "socket.io-client";
+import { Separator } from "@/components/ui/separator";
 
 export default function ChatPage() {
   const params = useParams();
   const solicitacaoId = params.id as string;
   const { data: session } = useSession();
   const [loadingMensagens, setLoadingMensagens] = useState(true);
-  const [mensagens, setMensagens] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [dataSolicitacao, setData] = useState([]);
+  const [mensagens, setMensagens] = useState([]);
   const [input, setInput] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
+  const mapStatusToLabel = {
+    CONCLUIDA: "Concluída",
+    EM_ATENDIMENTO: "Em atendimento",
+    CANCELADA: "Cancelada",
+    ABERTA: "Aberta",
+  };
+
+  const fetchSolicitacoes = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      const params = new URLSearchParams({
+        fields: ['id', 'assunto', 'prioridade', 'status', 'descricao', 'createdAt'].join(',')
+      });
+
+      const res = await fetch(`/api/solicitacao/${solicitacaoId}/`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" }
+      });
+
+      if (!res.ok) throw new Error();
+
+      const json = await res.json();
+      setData(json);
+      console.log(dataSolicitacao)
+    } catch {
+      toast.error("Erro ao buscar solicitações.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSolicitacoes();
+  }, [fetchSolicitacoes]);
 
   useEffect(() => {
     const socket = io({
@@ -89,7 +130,84 @@ export default function ChatPage() {
 
   return (
     <div className={`grid gap-6 grid-cols-[2fr_2fr] text-gray-100`}>
-      <section className='flex flex-col gap-4 col-span-1'></section>
+      <section className='flex flex-col gap-4 col-span-1'>
+        <Card>
+          <CardHeader className="px-4 pt-4 pb-2 border-b border-blue-400">
+            <CardTitle className="text-lg font-semibold text-blue-400">
+              Informações da Solicitação
+            </CardTitle>
+          </CardHeader>
+
+          <CardContent className="flex-1 overflow-y-auto space-y-5 py-6 px-4 text-sm">
+            <div className="space-y-1">
+              <p className="text-xs text-gray-400 uppercase">Assunto</p>
+              <p className="text-base font-medium text-white">{dataSolicitacao.assunto}</p>
+            </div>
+
+            <div className="space-y-1">
+              <p className="text-xs text-gray-400 uppercase">Descrição</p>
+              <p className="text-gray-300 whitespace-pre-line">{dataSolicitacao.descricao}</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <p className="text-xs text-gray-400 uppercase">Prioridade</p>
+                <Badge variant="outline" className="text-white border-gray-400" variant={'outline'}>
+                  {dataSolicitacao?.prioridade}
+                </Badge>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-xs text-gray-400 uppercase">Status</p>
+                <Badge
+                  variant="outline"
+                  className={cn("border", {
+                    "border-green-400 text-green-300": dataSolicitacao?.status === "CONCLUIDA",
+                    "border-yellow-400 text-yellow-300": dataSolicitacao?.status === "EM_ATENDIMENTO",
+                    "border-red-400 text-red-300": dataSolicitacao?.status === "CANCELADA",
+                    "border-blue-400 text-blue-300": dataSolicitacao?.status === "ABERTA",
+                  })}
+                >
+                  {mapStatusToLabel[dataSolicitacao?.status as keyof typeof mapStatusToLabel] ?? "Status desconhecido"}
+                </Badge>
+              </div>
+            </div>
+
+            <Separator className="my-2 bg-gray-600" />
+
+            <div className="space-y-1">
+              <p className="text-xs text-gray-400 uppercase">Solicitante</p>
+              <p className="text-white">{dataSolicitacao.user?.name}</p>
+              <p className="text-gray-400 text-xs">{dataSolicitacao.user?.email}</p>
+            </div>
+
+            {/* {solicitacao.atendente && (
+              <div className="space-y-1">
+                <p className="text-xs text-gray-400 uppercase">Atendente</p>
+                <p className="text-white">{dataSolicitacao?.solicitacao}</p>
+                <p className="text-gray-400 text-xs">{dataSolicitacao?.solicitacao}</p>
+              </div>
+            )} */}
+
+            <Separator className="my-2 bg-gray-600" />
+
+            <div className="text-xs text-gray-400 space-y-1">
+              <p>
+                Criado em:{" "}
+                <span className="text-white">
+                  {dayjs(dataSolicitacao?.createdAt).format("DD/MM/YYYY HH:mm")}
+                </span>
+              </p>
+              <p>
+                Atualizado em:{" "}
+                <span className="text-white">
+                  {dayjs(dataSolicitacao?.updatedAt).format("DD/MM/YYYY HH:mm")}
+                </span>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
       <section className='flex flex-col gap-4 col-span-1'>
         <Card className="flex flex-col h-[85vh]">
           <CardHeader className="px-4 pt-4 pb-2 border-b border-blue-400">

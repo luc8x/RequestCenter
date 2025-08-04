@@ -40,14 +40,14 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.permissao = (user as any).permissao; // importante
+        token.permissao = user.permissao;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
-        (session.user as any).permissao = token.permissao;  // Propaga aqui também
+        session.user.permissao = token.permissao;
       }
       return session;
     },

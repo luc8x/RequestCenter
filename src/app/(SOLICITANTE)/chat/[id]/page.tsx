@@ -18,73 +18,83 @@ import "dayjs/locale/pt-br";
 import { Send } from 'lucide-react';
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
-
-dayjs.locale("pt-br");
+import { io, Socket } from "socket.io-client";
 
 export default function ChatPage() {
   const params = useParams();
-  const solicitacaoId = params.id;
+  const solicitacaoId = params.id as string;
   const { data: session } = useSession();
-  const [mensagens, setMensagens] = useState<any[]>([]);
-  const [input, setInput] = useState("");
   const [loadingMensagens, setLoadingMensagens] = useState(true);
+  const [mensagens, setMensagens] = useState([]);
+  const [input, setInput] = useState("");
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    const fetchMensagens = async () => {
+    const socket = io({
+      path: "/api/socket_io",
+    });
+
+    socketRef.current = socket;
+
+    socket.emit("join_chat", solicitacaoId);
+
+    socket.on("nova_mensagem", (mensagem) => {
+      setMensagens((prev) => [...prev, mensagem]);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [solicitacaoId]);
+
+  useEffect(() => {
+    const buscarMensagensAntigas = async () => {
+      setLoadingMensagens(true);
       try {
-        setLoadingMensagens(true);
         const res = await fetch(`/api/solicitacao/chat/${solicitacaoId}`);
-        if (!res.ok) throw new Error();
         const data = await res.json();
         setMensagens(data);
       } catch (err) {
-        console.error("Erro ao buscar mensagens", err);
+        console.error("Erro ao buscar mensagens:", err);
       } finally {
         setLoadingMensagens(false);
       }
     };
 
-    fetchMensagens();
+    buscarMensagensAntigas();
   }, [solicitacaoId]);
-
 
   const handleEnviar = async () => {
     if (!input.trim()) return;
+    try {
+      const res = await fetch(`/api/solicitacao/chat/${solicitacaoId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ conteudo: input }),
+      });
 
-    const nova = {
-      conteudo: input,
-      autorId: session?.user?.id,
-      solicitacaoId,
-    };
+      if (res.ok) {
+        setInput("");
+      }
 
-    const res = await fetch(`/api/solicitacao/chat/${solicitacaoId}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(nova),
-    });
-
-    if (res.ok) {
-      const msgSalva = await res.json();
-      setMensagens((prev) => [...prev, msgSalva]);
-      setInput("");
-      scrollToBottom();
+    } catch (e) {
+      console.error("Erro ao enviar mensagem", e);
     }
-  };
+  }
 
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 50);
-  };
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [mensagens]);
 
   return (
     <div className={`grid gap-6 grid-cols-[2fr_2fr] text-gray-100`}>
+      <section className='flex flex-col gap-4 col-span-1'></section>
       <section className='flex flex-col gap-4 col-span-1'>
         <Card className="flex flex-col h-[85vh]">
           <CardHeader className="px-4 pt-4 pb-2 border-b border-blue-400">
             <CardTitle className="text-lg font-semibold text-blue-400">
-              Chat #{solicitacaoId}
+              Atendimento #{solicitacaoId}
             </CardTitle>
           </CardHeader>
 
@@ -128,7 +138,6 @@ export default function ChatPage() {
               mensagens.map((msg) => {
                 const isSelf = msg.autorId === session?.user?.id;
                 const hora = dayjs(msg.createdAt).format("HH:mm");
-
                 return (
                   <motion.div
                     key={msg.id}
@@ -176,7 +185,6 @@ export default function ChatPage() {
                       <div className="w-10 h-10 rounded-full bg-gray-600 shadow-md" />
                     )}
                   </motion.div>
-
                 );
               })
             ) : (

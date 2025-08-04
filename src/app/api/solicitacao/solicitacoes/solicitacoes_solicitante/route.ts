@@ -15,7 +15,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Assunto e descrição são obrigatórios" }, { status: 400 });
   }
 
-  // Validação enum Prioridade
   const prioridadesValidas = ["BAIXA", "MEDIA", "ALTA", "CRITICA", "NAO_INFORMADA"];
   if (prioridade && !prioridadesValidas.includes(prioridade)) {
     return NextResponse.json({ error: "Prioridade inválida" }, { status: 400 });

@@ -20,7 +20,6 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
   }
 
   const userId = session.user.id;
-  const permissao = session.user.permissao;
 
   if (solicitacaoAtual.userId !== userId) {
     return NextResponse.json({ error: "Sem permissão para deletar" }, { status: 403 });
@@ -60,9 +59,15 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   const userId = session.user.id;
   const permissao = session.user.permissao;
 
-  if (solicitacao.userId !== userId || solicitacao.atendenteId !== userId || permissao !== "ATENDENTE") {
+if (solicitacao.userId !== userId && solicitacao.atendenteId !== userId && permissao !== "ATENDENTE") {
+
+    console.log('userId: ', solicitacao.userId)
+    console.log('atendente: ', solicitacao.atendenteId)
+    console.log('userSession: ', userId)
     return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }
+
+  console.log('solicitacao: ', solicitacao)
 
   return NextResponse.json(solicitacao);
 }

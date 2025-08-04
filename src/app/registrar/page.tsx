@@ -14,11 +14,11 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import ParticulasDotsBackground from "@/components/TSparticulasBackground";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select"
 
 // Icons
@@ -54,10 +54,10 @@ export default function RegisterPage() {
     return (
         <div className="relative min-h-screen flex items-center justify-center">
             <ParticulasDotsBackground />
-            <div className="bg-white/10 backdrop-blur rounded-lg shadow-lg p-6 border border-white text-white">
+            <section className="bg-white/10 backdrop-blur rounded-lg shadow-lg p-6 border border-blue-300 text-white w-full max-w-md">
                 <div className="flex justify-between mb-2">
                     <h1 className="text-3xl font-semibold">Cadastrar-se</h1>
-                    <a href="/login" className="text-sm flex gap-2 items-center"><DoorOpen size={15} />Login</a>
+                    <a href="/login" className="text-sm flex gap-2 items-center text-blue-300"><DoorOpen size={15} />Login</a>
                 </div>
                 <p className="mb-4 text-sm text-white">Insira as informações abaixo para criar sua conta.</p>
                 <div className="mb-5 flex justify-between gap-2">
@@ -119,8 +119,7 @@ export default function RegisterPage() {
                         </Button>
                     </form>
                 </div>
-
-            </div>
+            </section>
         </div>
     )
 }

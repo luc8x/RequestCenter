@@ -1,14 +1,14 @@
-let io;
+import { Server as IOServer } from "socket.io";
 
-function setIO(serverInstance) {
-  const { Server } = require("socket.io");
+let io = null;
 
-  if (global.__io) {
-    io = global.__io;
+export function setIO(server) {
+  if (globalThis.__io) {
+    io = globalThis.__io;
     return io;
   }
 
-  io = new Server(serverInstance, {
+  io = new IOServer(server, {
     path: "/api/socket_io",
     cors: {
       origin: "*",
@@ -17,24 +17,24 @@ function setIO(serverInstance) {
   });
 
   io.on("connection", (socket) => {
-    console.log("Novo cliente conectado");
+    console.log("🔌 Novo cliente conectado");
 
     socket.on("join_chat", (chatId) => {
       socket.join(chatId);
     });
 
     socket.on("disconnect", () => {
-      console.log("Cliente desconectado");
+      console.log("❌ Cliente desconectado");
     });
   });
 
-  global.__io = io;
+  globalThis.__io = io;
   return io;
 }
 
-function getIO() {
-  if (global.__io) return global.__io;
-  throw new Error("Socket.IO não foi inicializado.");
+export function getIO() {
+  if (!globalThis.__io) {
+    throw new Error("Socket.IO não foi inicializado.");
+  }
+  return globalThis.__io;
 }
-
-module.exports = { setIO, getIO };

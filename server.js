@@ -1,8 +1,9 @@
-const { createServer } = require("http");
-const next = require("next");
-const { setIO } = require("./src/lib/socket");
+import { createServer } from "http";
+import next from "next";
+import { setIO } from "./src/lib/socket.js";
 
-const app = next({ dev: process.env.NODE_ENV !== "production" });
+const dev = process.env.NODE_ENV !== "production";
+const app = next({ dev });
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
@@ -13,6 +14,6 @@ app.prepare().then(() => {
   setIO(server);
 
   server.listen(3000, () => {
-    console.log("Servidor rodando em http://localhost:3000");
+    console.log("🚀 Servidor rodando em http://localhost:3000");
   });
 });
