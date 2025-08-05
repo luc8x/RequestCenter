@@ -29,6 +29,7 @@ import { LoaderCircle, Trash2, SquarePen, BadgePlus } from "lucide-react";
 type FormValues = {
   assunto: string;
   descricao: string;
+  arquivo: File;
 };
 
 export default function SolicitacaoPage() {
@@ -74,39 +75,44 @@ export default function SolicitacaoPage() {
   }, []);
 
   const fetchChats = useCallback(async () => {
-      try {
-        setLoadingChat(true);
-  
-        const res = await fetch("/api/solicitacao/chats", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-  
-        if (!res.ok) throw new Error();
-  
-        const json = await res.json();
-        setDataChat(json);
-      } catch {
-        toast.error("Erro ao buscar chats.");
-      } finally {
-        setLoadingChat(false);
-      }
-    }, []);
-  
-    useEffect(() => {
-      fetchSolicitacoes();
-      fetchChats();
-    }, [fetchSolicitacoes, fetchChats]);
-
-  const onSubmit = async (formData: FormValues) => {
-    setError("");
     try {
+      setLoadingChat(true);
+
+      const res = await fetch("/api/solicitacao/chats", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) throw new Error();
+
+      const json = await res.json();
+      setDataChat(json);
+    } catch {
+      toast.error("Erro ao buscar chats.");
+    } finally {
+      setLoadingChat(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSolicitacoes();
+    fetchChats();
+  }, [fetchSolicitacoes, fetchChats]);
+
+  const onSubmit = async (data: FormValues) => {
+    setError("");
+
+    try {
+      const formData = new FormData();
+      formData.append("assunto", data.assunto);
+      formData.append("descricao", data.descricao);
+      if (data.arquivo) formData.append("arquivo", data.arquivo);
+
       const res = await fetch("/api/solicitacao/solicitacoes/solicitacoes_solicitante/", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body:formData,
       });
 
       if (!res.ok) {
@@ -141,16 +147,7 @@ export default function SolicitacaoPage() {
   };
 
   return (
-    <div className="grid gap-6 grid-cols-[1fr_2fr_1fr] text-gray-100">
-      {/* Métricas */}
-      <section className="flex flex-col gap-4">
-        <div className="rounded-xl p-5 bg-gray-800 border border-gray-700 shadow-lg">
-          <h3 className="font-semibold mb-1 text-blue-400">Solicitações</h3>
-          <p className="text-sm text-gray-400 mb-4">Métricas gerais do sistema</p>
-          {/* Coloque aqui seus KPIs, gráficos ou contadores */}
-        </div>
-      </section>
-
+    <div className="grid gap-6 grid-cols-1 md:grid-cols-[2fr_1fr] text-gray-100">
       {/* Solicitações e Formulário */}
       <section className="flex flex-col gap-4 col-span-1">
         <div className="rounded-xl p-5 bg-gray-800 border border-gray-700 shadow-lg">
@@ -189,6 +186,19 @@ export default function SolicitacaoPage() {
                     />
                     {errors.descricao && (
                       <p className="text-red-500 text-sm">{errors.descricao.message}</p>
+                    )}
+                  </fieldset>
+
+                  <fieldset className="flex flex-col gap-2">
+                    <Label htmlFor="arquivo">Anexo</Label>
+                    <Input
+                      id="arquivo"
+                      type="file"
+                      {...register("arquivo")}
+                      placeholder="Arquivo do produto"
+                    />
+                    {errors.arquivo && (
+                      <p className="text-red-500 text-sm">{errors.arquivo.message}</p>
                     )}
                   </fieldset>
 
@@ -295,7 +305,7 @@ export default function SolicitacaoPage() {
 
       {/* Chats */}
       <section>
-      {loadingChat ? (
+        {loadingChat ? (
           <Card>
             <h3 className="font-semibold mb-4 text-blue-400">Chat recente</h3>
             <div className="flex flex-col gap-5">
@@ -316,7 +326,7 @@ export default function SolicitacaoPage() {
             </div>
           </Card>
 
-      ) : dataChat.length > 0 ? (
+        ) : dataChat.length > 0 ? (
           <Card>
             <h3 className="font-semibold mb-4 text-blue-400">Chat recente</h3>
             <div className="max-h-80 overflow-auto flex flex-col gap-4 pr-1">
@@ -345,9 +355,14 @@ export default function SolicitacaoPage() {
               ))}
             </div>
           </Card>
-      ) : (
-        <p className="text-gray-400 text-sm">Nenhum chat em andamento.</p>
-      )}
+        ) : (
+          <Card>
+            <h3 className="font-semibold mb-4 text-blue-400">Chat recente</h3>
+            <div className="max-h-80 overflow-auto flex flex-col gap-4 pr-1">
+              <p className="text-gray-400 text-sm">Nenhum chat em andamento.</p>
+            </div>
+          </Card>
+        )}
       </section>
     </div>
 

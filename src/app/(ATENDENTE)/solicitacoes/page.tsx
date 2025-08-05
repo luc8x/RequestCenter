@@ -20,12 +20,13 @@ import { Solicitacao } from "@/components/solicitacoes/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquareShare } from "lucide-react";
 export default function SolicitacaoPage() {
-  const [dataSolicitacao, setData] = useState<Solicitacao[]>([]);
+  const [dataSolicitacaoAberto, setSolicitacaoAberto] = useState<Solicitacao[]>([]);
+  const [dataSolicitacaoConcluidas, setSolicitacaoConcluidas] = useState<Solicitacao[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingChat, setLoadingChat] = useState(true);
   const [dataChat, setDataChat] = useState([]);
 
-  const fetchSolicitacoes = useCallback(async () => {
+  const fetchSolicitacoesAberto = useCallback(async () => {
     try {
       setLoading(true);
 
@@ -41,7 +42,31 @@ export default function SolicitacaoPage() {
       if (!res.ok) throw new Error();
 
       const json = await res.json();
-      setData(json);
+      setSolicitacaoAberto(json);
+    } catch {
+      toast.error("Erro ao buscar solicitações.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const fetchSolicitacaoConcluidas = useCallback(async () => {
+    try {
+      setLoading(true);
+
+      const params = new URLSearchParams({
+        fields: ['id', 'assunto', 'prioridade', 'status', 'descricao', 'createdAt'].join(',')
+      });
+
+      const res = await fetch(`/api/solicitacao/solicitacoes/solicitacoes_atendente/concluidas/?${params}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" }
+      });
+
+      if (!res.ok) throw new Error();
+
+      const json = await res.json();
+      setSolicitacaoConcluidas(json);
     } catch {
       toast.error("Erro ao buscar solicitações.");
     } finally {
@@ -72,9 +97,10 @@ export default function SolicitacaoPage() {
   }, []);
 
   useEffect(() => {
-    fetchSolicitacoes();
+    fetchSolicitacoesAberto();
+    fetchSolicitacaoConcluidas();
     fetchChats();
-  }, [fetchSolicitacoes, fetchChats]);
+  }, [fetchSolicitacoesAberto, fetchChats, fetchSolicitacaoConcluidas]);
 
   const router = useRouter();
 
@@ -100,25 +126,17 @@ export default function SolicitacaoPage() {
   };
 
   return (
-    <div className={`grid gap-6 grid-cols-[1fr_2fr_1fr] text-gray-100`}>
-      {/* Métricas */}
-      <section className='flex flex-col gap-4 col-span-1'>
-        <div className="rounded-xl p-5 bg-gray-800 border border-gray-700 shadow-lg">
-          <h3 className="font-semibold mb-1 text-blue-400">Solicitações</h3>
-          <p className="text-sm text-gray-400 mb-4">Métricas gerais do sistema</p>
-          {/* Coloque aqui seus KPIs, gráficos ou contadores */}
-        </div>
-      </section>
+    <div className={`grid gap-6 grid-cols-1 md:grid-cols-[2fr_1fr] text-gray-100`}>
 
       {/* Solicitações e Formulário */}
       <section className='flex flex-col gap-4 col-span-1'>
-
+        {/* Lista de Solicitações em aberto */}
         <div className="rounded-xl p-5 bg-gray-800 border border-gray-700 shadow-lg">
           <header className="flex justify-between items-center mb-4">
             <h3 className="font-semibold text-lg text-blue-400">Solicitações em aberto</h3>
           </header>
 
-          {/* Lista */}
+          {/* Lista de Solicitações abertos */}
           {loading ? (
             <div className="max-h-80 overflow-auto flex flex-col gap-4 pr-1">
               {[...Array(3)].map((_, i) => (
@@ -131,11 +149,11 @@ export default function SolicitacaoPage() {
                 </div>
               ))}
             </div>
-          ) : dataSolicitacao.length === 0 ? (
+          ) : dataSolicitacaoAberto.length === 0 ? (
             <p className="text-sm text-gray-400">Nenhuma solicitação encontrada.</p>
           ) : (
             <div className="max-h-80 overflow-auto flex flex-col gap-4 pr-1">
-              {dataSolicitacao.map((solicitacao) => (
+              {dataSolicitacaoAberto.map((solicitacao) => (
                 <Dialog key={solicitacao.id}>
                   <DialogTrigger asChild>
                     <div
@@ -190,11 +208,92 @@ export default function SolicitacaoPage() {
             </div>
           )}
         </div>
+
+        {/* Lista de Solicitações concluidas */}
+        <div className="rounded-xl p-5 bg-gray-800 border border-gray-700 shadow-lg">
+          <header className="flex justify-between items-center mb-4">
+            <h3 className="font-semibold text-lg text-blue-400">Solicitações concluidas</h3>
+          </header>
+
+
+          {loading ? (
+            <div className="max-h-80 overflow-auto flex flex-col gap-4 pr-1">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="rounded-xl p-4 bg-gray-700 animate-pulse flex justify-between items-start">
+                  <div className="space-y-2 w-full">
+                    <div className="h-4 bg-gray-500 rounded w-1/3" />
+                    <div className="h-3 bg-gray-600 rounded w-1/2" />
+                    <div className="h-3 bg-gray-600 rounded w-1/4" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : dataSolicitacaoConcluidas.length === 0 ? (
+            <p className="text-sm text-gray-400">Nenhuma solicitação encontrada.</p>
+          ) : (
+            <div className="max-h-80 overflow-auto flex flex-col gap-4 pr-1">
+              {dataSolicitacaoConcluidas.map((solicitacao) => (
+                <Dialog key={solicitacao.id}>
+                  <DialogTrigger asChild>
+                    <div
+                      key={solicitacao.id}
+                      className="rounded-xl p-4 bg-gray-700 hover:bg-gray-600 transition-colors flex justify-between items-start cursor-pointer"
+                    >
+                      <div>
+                        <h4 className="text-base font-semibold text-white">{solicitacao.assunto}</h4>
+                        <p className="text-sm text-gray-400">
+                          Prioridade: <span className="font-medium">{solicitacao.prioridade}</span>
+                        </p>
+                        <p className="text-sm text-gray-400">
+                          Status: <span className="font-medium">{solicitacao.status}</span>
+                        </p>
+                      </div>
+
+                    </div>
+                  </DialogTrigger>
+
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle className="text-blue-400">Detalhes da Solicitação</DialogTitle>
+                      <DialogDescription>
+                        Aqui estão as informações completas da solicitação.
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-2 text-sm text-gray-900">
+                      <p><strong>Assunto:</strong> {solicitacao.assunto}</p>
+                      <p><strong>Descrição:</strong> {solicitacao.descricao}</p>
+                      <p><strong>Prioridade:</strong> {solicitacao.prioridade}</p>
+                      <p><strong>Status:</strong> {solicitacao.status}</p>
+                      <p>
+                        <strong>Data de abertura:</strong>{" "}
+                        {new Date(solicitacao.createdAt).toLocaleDateString("pt-BR")} às{" "}
+                        {new Date(solicitacao.createdAt).toLocaleTimeString("pt-BR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                      <p>
+                        <strong>Data de fechamento:</strong>{" "}
+                        {new Date(solicitacao.closingAt).toLocaleDateString("pt-BR")} às{" "}
+                        {new Date(solicitacao.closingAt).toLocaleTimeString("pt-BR", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+              ))}
+            </div>
+          )}
+        </div>
       </section>
 
       {/* Chats */}
       <section>
-      {loadingChat ? (
+        {loadingChat ? (
           <Card>
             <h3 className="font-semibold mb-4 text-blue-400">Chats em Andamento</h3>
             <div className="flex flex-col gap-5">
@@ -215,7 +314,7 @@ export default function SolicitacaoPage() {
             </div>
           </Card>
 
-      ) : dataChat.length > 0 ? (
+        ) : dataChat.length > 0 ? (
           <Card>
             <h3 className="font-semibold mb-4 text-blue-400">Chats em Andamento</h3>
             <div className="max-h-80 overflow-auto flex flex-col gap-4 pr-1">
@@ -244,11 +343,16 @@ export default function SolicitacaoPage() {
               ))}
             </div>
           </Card>
-      ) : (
-        <p className="text-gray-400 text-sm">Nenhum chat em andamento.</p>
-      )}
+        ) : (
+          <Card>
+            <h3 className="font-semibold mb-4 text-blue-400">Chat recente</h3>
+            <div className="max-h-80 overflow-auto flex flex-col gap-4 pr-1">
+              <p className="text-gray-400 text-sm">Nenhum chat em andamento.</p>
+            </div>
+          </Card>
+        )}
 
-        </section>
+      </section>
     </div>
 
   );

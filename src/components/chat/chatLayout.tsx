@@ -163,7 +163,7 @@ export default function ChatLayout() {
   };
 
   return (
-    <div className={`grid gap-6 grid-cols-[2fr_2fr] text-gray-100`}>
+    <div className={`grid gap-6 grid-cols-1 md:grid-cols-[2fr_2fr] text-gray-100`}>
       <section className='flex flex-col gap-4 col-span-1'>
         <Card>
           <CardHeader className="px-4 pt-4 pb-2 border-b border-blue-400">
@@ -291,7 +291,7 @@ export default function ChatLayout() {
                       <Separator className="my-2 bg-gray-600" />
 
                       <div className="text-xs text-gray-400 space-y-1 flex flex-col gap-1.5">
-                        <p>Ações:</p>
+                        <p>AÇÕES</p>
                         <div className="flex gap-2">
                           <Button
                             type="button"
@@ -394,7 +394,7 @@ export default function ChatLayout() {
                     <motion.div
                       layout
                       className={cn(
-                        "rounded-2xl px-4 py-3 max-w-xs w-full shadow-md space-y-2 flex flex-col",
+                        "rounded-2xl px-2 py-2 max-w-xs w-full shadow-md space-y-2 flex flex-col",
                         isSelf ? "bg-blue-600" : "bg-gray-700"
                       )}
                     >
@@ -411,7 +411,7 @@ export default function ChatLayout() {
                               <img
                                 src={msg.arquivoUrl}
                                 alt="Arquivo"
-                                className="w-full max-w-[280px] h-auto rounded-lg object-contain"
+                                className="w-full h-auto rounded-lg object-contain"
                               />
                             </a>
                           ) : (
@@ -425,7 +425,7 @@ export default function ChatLayout() {
                                 <FileDown className="w-5 h-5 text-blue-400" />
                               </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="text-white text-sm truncate">{msg.arquivoNomeOriginal ?? "Arquivo"}</span>
+                                <span className="text-white text-sm truncate">{msg.arquivoNome ?? "Arquivo"}</span>
                                 <span className="text-xs text-gray-400 group-hover:underline">Clique para abrir</span>
                               </div>
                             </a>

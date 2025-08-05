@@ -2,30 +2,66 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
+import { writeFile } from "fs/promises";
+import { v4 as uuid } from "uuid";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.id || session.user.permissao !== "SOLICITANTE") {
-    return NextResponse.json({ error: `Vocé não está autorizado. ${session.user.permissao}` }, { status: 403 });
+
+  if (!session || session.user.permissao !== "SOLICITANTE") {
+    return NextResponse.json(
+      { error: "Não autorizado" },
+      { status: 403 }
+    );
   }
 
-  const { assunto, descricao, prioridade } = await req.json();
+  const contentType = req.headers.get("content-type");
+  if (!contentType?.startsWith("multipart/form-data")) {
+    return NextResponse.json(
+      { error: "Tipo de conteúdo inválido" },
+      { status: 400 }
+    );
+  }
+
+  const formData = await req.formData();
+  const assunto = (formData.get("assunto") as string)?.trim();
+  const descricao = (formData.get("descricao") as string)?.trim();
+  const arquivo = formData.get("arquivo") as File | null;
 
   if (!assunto || !descricao) {
-    return NextResponse.json({ error: "Assunto e descrição são obrigatórios" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Assunto e descrição são obrigatórios" },
+      { status: 400 }
+    );
   }
 
-  const prioridadesValidas = ["BAIXA", "MEDIA", "ALTA", "CRITICA", "NAO_INFORMADA"];
-  if (prioridade && !prioridadesValidas.includes(prioridade)) {
-    return NextResponse.json({ error: "Prioridade inválida" }, { status: 400 });
+  let arquivoUrl: string | null = null;
+  let arquivoNome: string | null = null;
+
+  if (arquivo && arquivo.size > 0) {
+
+    if (arquivo.type?.startsWith("image/")) {
+      return NextResponse.json({ error: "Apenas imagens são permitidas." }, { status: 400 });
+    }
+    
+    const buffer = Buffer.from(await arquivo.arrayBuffer());
+    const ext = path.extname(arquivo.name);
+    const nomeArquivo = `${uuid()}${ext}`;
+    const uploadPath = path.join(process.cwd(), "public", "uploads", "solicitacoes");
+
+    await writeFile(`${uploadPath}/${nomeArquivo}`, buffer);
+
+    arquivoUrl = `/uploads/solicitacoes/${nomeArquivo}`;
+    arquivoNome = arquivo.name;
   }
 
   const novaSolicitacao = await prisma.solicitacao.create({
     data: {
       assunto,
       descricao,
-      prioridade: prioridade ?? "NAO_INFORMADA",
       userId: session.user.id,
+      arquivoUrl,
+      arquivoNome,
     },
   });
 
@@ -39,7 +75,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  const fieldsParam = req.nextUrl.searchParams.get("fields"); 
+  const fieldsParam = req.nextUrl.searchParams.get("fields");
   const fields = fieldsParam?.split(",") ?? [];
 
   const select = fields.reduce((acc, field) => {
