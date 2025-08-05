@@ -1,7 +1,7 @@
 'use client';
 
 import { signOut, useSession } from "next-auth/react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,38 +9,50 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
+import { LogOut } from "lucide-react";
 
 export function Conta() {
-const { data: session } = useSession();
+  const { data: session, status } = useSession();
 
-  if (!session) return <p>Carregando</p>;
+  if (status === "loading") return null;
 
-return (
-    <div className="flex gap-2">
-        <DropdownMenu>
-            <DropdownMenuTrigger className="flex gap-2 items-center">
-                <Avatar>
-                    <AvatarImage src="https://github.com/shadcn.png" />
-                    <AvatarFallback>CN</AvatarFallback>
-                </Avatar>
-                <div className="p-2 text-white font-semibold text-1xl text-start leading-3">
-                    {session.user?.name}
-                    <br />
-                    <span className="text-sm font-light">{session.user?.email}</span>
-                </div>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-                <DropdownMenuLabel>Conta</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                    onClick={() => signOut({ callbackUrl: "/login" })}
-                    className="text-red-500"
-                >
-                    Deslogar
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
-    </div>
-);
+  const nome = session?.user?.name ?? "Usuário";
+  const email = session?.user?.email ?? "sem@email.com";
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className="flex items-center gap-3 rounded-md px-3 py-2 hover:bg-muted hover:text-black text-white transition-colors"
+          aria-label="Abrir menu de conta"
+        >
+          <Avatar className="w-9 h-9">
+            <AvatarImage src={session?.user?.image ?? "/avatar-placeholder.png"} />
+            <AvatarFallback className="text-black">
+              {nome?.[0] ?? "U"}
+              {nome?.split(" ")?.[1]?.[0] ?? "S"}
+            </AvatarFallback>
+          </Avatar>
+
+          <div className="hidden sm:flex flex-col text-left">
+            <span className="text-sm font-medium truncate">{nome}</span>
+            <span className="text-xs text-gray-400 truncate max-w-[180px]">{email}</span>
+          </div>
+        </button>
+      </DropdownMenuTrigger>
+
+      <DropdownMenuContent className="w-52 mt-2" align="end">
+        <DropdownMenuLabel className="text-xs text-gray-500">Conta</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem
+          onClick={() => signOut({ callbackUrl: "/login" })}
+          className="text-red-500 flex items-center gap-2 cursor-pointer"
+        >
+          <LogOut className="w-4 h-4" color="#ff0000" />
+          Sair
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
 }

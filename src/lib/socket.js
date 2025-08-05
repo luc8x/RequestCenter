@@ -17,14 +17,14 @@ export function setIO(server) {
   });
 
   io.on("connection", (socket) => {
-    console.log("🔌 Novo cliente conectado");
+    console.log("WebSocket - Novo cliente conectado!");
 
     socket.on("join_chat", (chatId) => {
       socket.join(chatId);
     });
 
     socket.on("disconnect", () => {
-      console.log("❌ Cliente desconectado");
+      console.error("WebSocket - Cliente desconectado");
     });
   });
 
@@ -34,7 +34,7 @@ export function setIO(server) {
 
 export function getIO() {
   if (!globalThis.__io) {
-    throw new Error("Socket.IO não foi inicializado.");
+    throw new Error("WebSocket - não foi inicializado.");
   }
   return globalThis.__io;
 }
