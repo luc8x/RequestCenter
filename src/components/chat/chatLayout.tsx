@@ -173,7 +173,7 @@ export default function ChatLayout() {
           </CardHeader>
 
           <CardContent className="flex-1 overflow-y-auto space-y-5 py-6 px-4 text-sm">
-            {loading ? (
+            {/* {loading ? (
               <>
                 <div className="space-y-1">
                   <Skeleton className="w-24 h-4" />
@@ -217,104 +217,115 @@ export default function ChatLayout() {
                   <Skeleton className="w-40 h-3" />
                 </div>
               </>
-            ) : (
-              <>
+            ) : ( */}
+            <>
+              <div className="space-y-1">
+                <p className="text-xs text-gray-400 uppercase">Assunto</p>
+                <p className="text-base font-medium text-white">{dataSolicitacao.assunto}</p>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-xs text-gray-400 uppercase">Descrição</p>
+                <p className="text-gray-300 whitespace-pre-line">{dataSolicitacao.descricao}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
-                  <p className="text-xs text-gray-400 uppercase">Assunto</p>
-                  <p className="text-base font-medium text-white">{dataSolicitacao.assunto}</p>
+                  <p className="text-xs text-gray-400 uppercase">Prioridade</p>
+                  <Badge variant="outline" className="text-white border-gray-400">
+                    {mapPrioridadeToLabel[dataSolicitacao?.prioridade as keyof typeof mapPrioridadeToLabel] ?? "Não informada"}
+                  </Badge>
                 </div>
 
                 <div className="space-y-1">
-                  <p className="text-xs text-gray-400 uppercase">Descrição</p>
-                  <p className="text-gray-300 whitespace-pre-line">{dataSolicitacao.descricao}</p>
-                </div>
+                  <p className="text-xs text-gray-400 uppercase">Status</p>
+                  <Badge
+                    variant="outline"
+                    className={cn("border", {
+                      "border-green-400 text-green-300": dataSolicitacao?.status === "FINALIZADA",
+                      "border-yellow-400 text-yellow-300": dataSolicitacao?.status === "EM_ATENDIMENTO",
+                      "border-red-400 text-red-300": dataSolicitacao?.status === "CANCELADA",
+                      "border-blue-400 text-blue-300": dataSolicitacao?.status === "ABERTA",
+                    })}
+                  >
 
-                <div className="grid grid-cols-2 gap-4">
+                    {mapStatusToLabel[dataSolicitacao?.status as keyof typeof mapStatusToLabel] ?? "Status desconhecido"}
+                  </Badge>
+                </div>
+              </div>
+
+              <Separator className="my-2 bg-gray-600" />
+
+              <div className="space-y-1">
+                <p className="text-xs text-gray-400 uppercase">Solicitante</p>
+                <p className="text-white">{dataSolicitacao.user?.name}</p>
+                <p className="text-gray-400 text-xs">{dataSolicitacao.user?.email}</p>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-xs text-gray-400 uppercase">Atendente</p>
+                <p className="text-white">{dataSolicitacao.atendente?.name}</p>
+                <p className="text-gray-400 text-xs">{dataSolicitacao.atendente?.email}</p>
+              </div>
+              {dataSolicitacao.arquivoUrl && (
+                <>
+                  <Separator className="my-2 bg-gray-600" />
+
                   <div className="space-y-1">
-                    <p className="text-xs text-gray-400 uppercase">Prioridade</p>
-                    <Badge variant="outline" className="text-white border-gray-400">
-                      {mapPrioridadeToLabel[dataSolicitacao?.prioridade as keyof typeof mapPrioridadeToLabel] ?? "Não informada"}
-                    </Badge>
+                    <p className="text-xs text-gray-400 uppercase">Arquivo da Solicitação</p>
+                    <a href={dataSolicitacao.arquivoUrl} target="_blank" rel="noopener noreferrer">Visualizar</a>
                   </div>
+                </>
+              )}
 
-                  <div className="space-y-1">
-                    <p className="text-xs text-gray-400 uppercase">Status</p>
-                    <Badge
-                      variant="outline"
-                      className={cn("border", {
-                        "border-green-400 text-green-300": dataSolicitacao?.status === "FINALIZADA",
-                        "border-yellow-400 text-yellow-300": dataSolicitacao?.status === "EM_ATENDIMENTO",
-                        "border-red-400 text-red-300": dataSolicitacao?.status === "CANCELADA",
-                        "border-blue-400 text-blue-300": dataSolicitacao?.status === "ABERTA",
-                      })}
-                    >
+              <Separator className="my-2 bg-gray-600" />
 
-                      {mapStatusToLabel[dataSolicitacao?.status as keyof typeof mapStatusToLabel] ?? "Status desconhecido"}
-                    </Badge>
+              <div className="text-xs text-gray-400 space-y-1">
+                <p>
+                  Criado em:{" "}
+                  <span className="text-white">
+                    {dayjs(dataSolicitacao?.createdAt).format("DD/MM/YYYY HH:mm")}
+                  </span>
+                </p>
+                <p>
+                  Atualizado em:{" "}
+                  <span className="text-white">
+                    {dayjs(dataSolicitacao?.updatedAt).format("DD/MM/YYYY HH:mm")}
+                  </span>
+                </p>
+              </div>
+
+              {session?.user?.permissao === 'ATENDENTE' &&
+              dataSolicitacao?.status !== 'FINALIZADA' &&
+              dataSolicitacao?.status !== 'CANCELADA' && (
+                <>
+                  <Separator className="my-2 bg-gray-600" />
+
+                  <div className="text-xs text-gray-400 space-y-1 flex flex-col gap-1.5">
+                    <p>AÇÕES</p>
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="success"
+                        onClick={() => handleStatusChange("FINALIZADA")}
+                      >
+                        <Check className="w-4 h-4 mr-1" />
+                        Resolvido
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        onClick={() => handleStatusChange("CANCELADA")}
+                      >
+                        <X className="w-4 h-4 mr-1" />
+                        Cancelado
+                      </Button>
+                    </div>
                   </div>
-                </div>
-
-                <Separator className="my-2 bg-gray-600" />
-
-                <div className="space-y-1">
-                  <p className="text-xs text-gray-400 uppercase">Solicitante</p>
-                  <p className="text-white">{dataSolicitacao.user?.name}</p>
-                  <p className="text-gray-400 text-xs">{dataSolicitacao.user?.email}</p>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-xs text-gray-400 uppercase">Atendente</p>
-                  <p className="text-white">{dataSolicitacao.atendente?.name}</p>
-                  <p className="text-gray-400 text-xs">{dataSolicitacao.atendente?.email}</p>
-                </div>
-
-                <Separator className="my-2 bg-gray-600" />
-
-                <div className="text-xs text-gray-400 space-y-1">
-                  <p>
-                    Criado em:{" "}
-                    <span className="text-white">
-                      {dayjs(dataSolicitacao?.createdAt).format("DD/MM/YYYY HH:mm")}
-                    </span>
-                  </p>
-                  <p>
-                    Atualizado em:{" "}
-                    <span className="text-white">
-                      {dayjs(dataSolicitacao?.updatedAt).format("DD/MM/YYYY HH:mm")}
-                    </span>
-                  </p>
-                </div>
-                {session?.user?.permissao === 'ATENDENTE' &&
-                  dataSolicitacao?.status !== 'FINALIZADA' &&
-                  dataSolicitacao?.status !== 'CANCELADA' && (
-                    <>
-                      <Separator className="my-2 bg-gray-600" />
-
-                      <div className="text-xs text-gray-400 space-y-1 flex flex-col gap-1.5">
-                        <p>AÇÕES</p>
-                        <div className="flex gap-2">
-                          <Button
-                            type="button"
-                            variant="outlineGreen"
-                            onClick={() => handleStatusChange("FINALIZADA")}
-                          >
-                            <Check className="w-4 h-4 mr-1" />
-                            Resolvido
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            onClick={() => handleStatusChange("CANCELADA")}
-                          >
-                            <X className="w-4 h-4 mr-1" />
-                            Cancelado
-                          </Button>
-                        </div>
-                      </div>
-                    </>
-                  )}
-              </>
-            )}
+                </>
+              )}
+            </>
+            {/* )} */}
           </CardContent>
         </Card>
       </section>
@@ -322,7 +333,7 @@ export default function ChatLayout() {
         <Card className="flex flex-col h-[85vh]">
           <CardHeader className="px-4 pt-4 pb-2 border-b border-blue-400">
             <CardTitle className="text-lg font-semibold text-blue-400">
-              Atendimento #{solicitacaoId}
+              Atendimento
             </CardTitle>
           </CardHeader>
 
@@ -369,8 +380,10 @@ export default function ChatLayout() {
                 return (
                   <motion.div
                     key={msg.id}
-                    initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    initial={msg.autorId === session?.user?.id && msg.id === mensagens[mensagens.length - 1]?.id ?
+                      { opacity: 0, y: 20, scale: 0.95 } : false}
+                    animate={msg.autorId === session?.user?.id && msg.id === mensagens[mensagens.length - 1]?.id ?
+                      { opacity: 1, y: 0, scale: 1 } : false}
                     transition={{
                       duration: 0.35,
                       type: "spring",

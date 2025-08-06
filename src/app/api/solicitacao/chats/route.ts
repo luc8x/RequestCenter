@@ -17,6 +17,7 @@ export async function GET() {
           take: 1,
           select: {
             conteudo: true,
+            arquivoNome: true,
             autor: {
               select: {
                 name: true,
@@ -33,7 +34,7 @@ export async function GET() {
         id: chat.id,
         assunto: chat.assunto,
         name: ultima.autor.name,
-        mensagem: ultima.conteudo,
+        mensagem: ultima.conteudo || ultima.arquivoNome,
         avatar: "https://github.com/shadcn.png",
       };
     });

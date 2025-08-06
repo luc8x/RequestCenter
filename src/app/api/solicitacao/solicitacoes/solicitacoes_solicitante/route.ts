@@ -1,9 +1,10 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { writeFile } from "fs/promises";
 import { v4 as uuid } from "uuid";
+import path from "path";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -26,21 +27,23 @@ export async function POST(req: NextRequest) {
   const formData = await req.formData();
   const assunto = (formData.get("assunto") as string)?.trim();
   const descricao = (formData.get("descricao") as string)?.trim();
-  const arquivo = formData.get("arquivo") as File | null;
 
+  console.log('form: ',formData)
+  
   if (!assunto || !descricao) {
     return NextResponse.json(
       { error: "Assunto e descrição são obrigatórios" },
       { status: 400 }
     );
   }
-
+  
+  const arquivos = formData.getAll("arquivo");
+  const arquivo = arquivos[0];
   let arquivoUrl: string | null = null;
   let arquivoNome: string | null = null;
 
   if (arquivo && arquivo.size > 0) {
-
-    if (arquivo.type?.startsWith("image/")) {
+    if (!arquivo.type?.startsWith("image/")) {
       return NextResponse.json({ error: "Apenas imagens são permitidas." }, { status: 400 });
     }
     
@@ -48,6 +51,11 @@ export async function POST(req: NextRequest) {
     const ext = path.extname(arquivo.name);
     const nomeArquivo = `${uuid()}${ext}`;
     const uploadPath = path.join(process.cwd(), "public", "uploads", "solicitacoes");
+    
+    const fs = require('fs');
+    if (!fs.existsSync(uploadPath)) {
+      fs.mkdirSync(uploadPath, { recursive: true });
+    }
 
     await writeFile(`${uploadPath}/${nomeArquivo}`, buffer);
 
@@ -55,6 +63,7 @@ export async function POST(req: NextRequest) {
     arquivoNome = arquivo.name;
   }
 
+  console.log(arquivoNome, arquivoUrl)
   const novaSolicitacao = await prisma.solicitacao.create({
     data: {
       assunto,

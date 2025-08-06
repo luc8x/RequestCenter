@@ -29,7 +29,7 @@ import { LoaderCircle, Trash2, SquarePen, BadgePlus } from "lucide-react";
 type FormValues = {
   assunto: string;
   descricao: string;
-  arquivo: File;
+  arquivo: FileList;
 };
 
 export default function SolicitacaoPage() {
@@ -104,11 +104,16 @@ export default function SolicitacaoPage() {
   const onSubmit = async (data: FormValues) => {
     setError("");
 
+    console.log('data: ',data)
+
     try {
       const formData = new FormData();
       formData.append("assunto", data.assunto);
       formData.append("descricao", data.descricao);
-      if (data.arquivo) formData.append("arquivo", data.arquivo);
+      const arquivo = data.arquivo?.[0];
+      if (arquivo) {
+        formData.append("arquivo", arquivo);
+      }
 
       const res = await fetch("/api/solicitacao/solicitacoes/solicitacoes_solicitante/", {
         method: "POST",
@@ -192,11 +197,18 @@ export default function SolicitacaoPage() {
                   <fieldset className="flex flex-col gap-2">
                     <Label htmlFor="arquivo">Anexo</Label>
                     <Input
-                      id="arquivo"
-                      type="file"
-                      {...register("arquivo")}
-                      placeholder="Arquivo do produto"
-                    />
+                    id="arquivo"
+                    type="file"
+                    accept="image/*"
+                    {...register("arquivo", {
+                      validate: (fileList: FileList) => {
+                        if (!fileList?.length) return "Arquivo é obrigatório";
+                        const file = fileList[0];
+                        if (!file.type.startsWith("image/")) return "Apenas imagens são permitidas";
+                        return true;
+                      },
+                    })}
+                  />
                     {errors.arquivo && (
                       <p className="text-red-500 text-sm">{errors.arquivo.message}</p>
                     )}
