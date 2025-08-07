@@ -9,6 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Dialog,
   DialogContent,
@@ -104,8 +110,6 @@ export default function SolicitacaoPage() {
   const onSubmit = async (data: FormValues) => {
     setError("");
 
-    console.log('data: ',data)
-
     try {
       const formData = new FormData();
       formData.append("assunto", data.assunto);
@@ -117,7 +121,7 @@ export default function SolicitacaoPage() {
 
       const res = await fetch("/api/solicitacao/solicitacoes/solicitacoes_solicitante/", {
         method: "POST",
-        body:formData,
+        body: formData,
       });
 
       if (!res.ok) {
@@ -197,18 +201,18 @@ export default function SolicitacaoPage() {
                   <fieldset className="flex flex-col gap-2">
                     <Label htmlFor="arquivo">Anexo</Label>
                     <Input
-                    id="arquivo"
-                    type="file"
-                    accept="image/*"
-                    {...register("arquivo", {
-                      validate: (fileList: FileList) => {
-                        if (!fileList?.length) return "Arquivo é obrigatório";
-                        const file = fileList[0];
-                        if (!file.type.startsWith("image/")) return "Apenas imagens são permitidas";
-                        return true;
-                      },
-                    })}
-                  />
+                      id="arquivo"
+                      type="file"
+                      accept="image/*"
+                      {...register("arquivo", {
+                        validate: (fileList: FileList) => {
+                          if (!fileList?.length) return "Arquivo é obrigatório";
+                          const file = fileList[0];
+                          if (!file.type.startsWith("image/")) return "Apenas imagens são permitidas";
+                          return true;
+                        },
+                      })}
+                    />
                     {errors.arquivo && (
                       <p className="text-red-500 text-sm">{errors.arquivo.message}</p>
                     )}
@@ -257,60 +261,79 @@ export default function SolicitacaoPage() {
           ) : dataSolicitacao.length === 0 ? (
             <p key={0} className="text-sm text-gray-400">Nenhuma solicitação encontrada.</p>
           ) : (
-            <div className="max-h-80 overflow-auto flex flex-col gap-4 pr-1">
-              {dataSolicitacao.map((solicitacao) => (
-                <div
-                  key={solicitacao.id}
-                  className="rounded-xl p-4 bg-gray-700 hover:bg-gray-600 transition-colors flex justify-between items-start"
-                >
-                  <div>
-                    <h4 className="text-base font-semibold text-white">{solicitacao.assunto}</h4>
-                    <p className="text-sm text-gray-400">
-                      Prioridade: <span className="font-medium">{solicitacao.prioridade}</span>
-                    </p>
-                    <p className="text-sm text-gray-400">
-                      Status: <span className="font-medium">{solicitacao.status}</span>
-                    </p>
-                  </div>
+            // <div className="max-h-80 overflow-auto ">
+            <ScrollArea className="max-h-80 rounded-md flex flex-col">
 
-                  <div className="flex gap-2">
-                    <Dialog>
-                      <DialogTrigger className="p-2 rounded hover:bg-gray-600 transition">
-                        <Trash2 className="h-4 w-4 text-red-400" />
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Confirmar exclusão</DialogTitle>
-                          <DialogDescription>Deseja realmente deletar esta solicitação?</DialogDescription>
-                        </DialogHeader>
-                        <DialogFooter>
-                          <Button variant="destructive" onClick={() => handleDelete(solicitacao.id)}>
-                            <Trash2 className="h-4 w-4" /> Deletar
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
+                {dataSolicitacao.map((solicitacao) => (
+                  <div
+                    key={solicitacao.id}
+                    className="rounded-xl p-4 bg-gray-700 hover:bg-gray-600 transition-colors flex justify-between items-start mb-4"
+                  >
+                    <div>
+                      <h4 className="text-base font-semibold text-white">{solicitacao.assunto}</h4>
+                      <p className="text-sm text-gray-400">
+                        Prioridade: <span className="font-medium">{solicitacao.prioridade}</span>
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        Status: <span className="font-medium">{solicitacao.status}</span>
+                      </p>
+                    </div>
 
-                    <Dialog open={open && solicitacaoEdit?.id === solicitacao.id} onOpenChange={setOpen}>
-                      <DialogTrigger
-                        onClick={() => {
-                          setSolicitacaoEdit(solicitacao);
-                          setOpen(true);
-                        }}
-                        className="p-2 rounded hover:bg-gray-600 transition"
-                      >
-                        <SquarePen className="h-4 w-4 text-blue-400" />
-                      </DialogTrigger>
-                      <DialogContent>
-                        {solicitacaoEdit && (
-                          <EditSolicitacaoForm solicitacao={solicitacaoEdit} onClose={handleCloseEdit} />
-                        )}
-                      </DialogContent>
-                    </Dialog>
+                    <div className="flex gap-2">
+                      <Dialog>
+                        <DialogTrigger className="p-2 rounded hover:bg-gray-600 transition">
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Trash2 className="h-4 w-4 text-red-400" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Deletar</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Confirmar exclusão</DialogTitle>
+                            <DialogDescription>Deseja realmente deletar esta solicitação?</DialogDescription>
+                          </DialogHeader>
+                          <DialogFooter>
+                            <Button variant="destructive" onClick={() => handleDelete(solicitacao.id)}>
+                              <Trash2 className="h-4 w-4" /> Deletar
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+
+                      <Dialog open={open && solicitacaoEdit?.id === solicitacao.id} onOpenChange={setOpen}>
+                        <DialogTrigger
+                          onClick={() => {
+                            setSolicitacaoEdit(solicitacao);
+                            setOpen(true);
+                          }}
+                          className="p-2 rounded hover:bg-gray-600 transition"
+                        >
+
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <SquarePen className="h-4 w-4 text-blue-400" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Editar</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </DialogTrigger>
+                        <DialogContent>
+                          {solicitacaoEdit && (
+                            <EditSolicitacaoForm solicitacao={solicitacaoEdit} onClose={handleCloseEdit} />
+                          )}
+                        </DialogContent>
+                      </Dialog>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+
+            </ScrollArea>
+            // </div>
           )}
         </div>
       </section>

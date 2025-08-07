@@ -173,51 +173,58 @@ export default function ChatLayout() {
           </CardHeader>
 
           <CardContent className="flex-1 overflow-y-auto space-y-5 py-6 px-4 text-sm">
-            {/* {loading ? (
-              <>
+            {loading ? (
+              <div className="animate-pulse flex-1 overflow-y-auto space-y-5 text-sm">
                 <div className="space-y-1">
-                  <Skeleton className="w-24 h-4" />
-                  <Skeleton className="w-full h-5" />
+                  <div className="w-24 h-4 bg-gray-600 rounded-md" />
+                  <div className="w-full h-5 bg-gray-600 rounded-md" />
                 </div>
 
                 <div className="space-y-1">
-                  <Skeleton className="w-24 h-4" />
-                  <Skeleton className="w-full h-20" />
+                  <div className="w-24 h-4 bg-gray-600 rounded-md" />
+                  <div className="w-full h-20 bg-gray-600 rounded-md" />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
-                    <Skeleton className="w-24 h-4" />
-                    <Skeleton className="w-20 h-6" />
+                    <div className="w-24 h-4 bg-gray-600 rounded-md" />
+                    <div className="w-20 h-6 bg-gray-600 rounded-md" />
                   </div>
                   <div className="space-y-1">
-                    <Skeleton className="w-24 h-4" />
-                    <Skeleton className="w-20 h-6" />
+                    <div className="w-24 h-4 bg-gray-600 rounded-md" />
+                    <div className="w-20 h-6 bg-gray-600 rounded-md" />
                   </div>
                 </div>
 
-                <Skeleton className="h-px bg-gray-500 my-2" />
+                <div className="h-px bg-gray-500 my-2" />
 
                 <div className="space-y-1">
-                  <Skeleton className="w-24 h-4" />
-                  <Skeleton className="w-40 h-4" />
-                  <Skeleton className="w-56 h-3" />
+                  <div className="w-24 h-4 bg-gray-600 rounded-md" />
+                  <div className="w-40 h-4 bg-gray-600 rounded-md" />
+                  <div className="w-56 h-3 bg-gray-600 rounded-md" />
                 </div>
 
                 <div className="space-y-1">
-                  <Skeleton className="w-24 h-4" />
-                  <Skeleton className="w-40 h-4" />
-                  <Skeleton className="w-56 h-3" />
+                  <div className="w-24 h-4 bg-gray-600 rounded-md" />
+                  <div className="w-40 h-4 bg-gray-600 rounded-md" />
+                  <div className="w-56 h-3 bg-gray-600 rounded-md" />
                 </div>
 
-                <Skeleton className="h-px bg-gray-500 my-2" />
+                <div className="h-px bg-gray-500 my-2" />
 
                 <div className="text-xs text-gray-400 space-y-1">
-                  <Skeleton className="w-40 h-3" />
-                  <Skeleton className="w-40 h-3" />
+                  <div className="w-40 h-3 bg-gray-600 rounded-md" />
+                  <div className="w-40 h-3 bg-gray-600 rounded-md" />
                 </div>
-              </>
-            ) : ( */}
+
+                <div className="h-px bg-gray-500 my-2" />
+
+                <div className="text-xs text-gray-400 space-y-1">
+                  <div className="w-40 h-3 bg-gray-600 rounded-md" />
+                  <div className="w-40 h-3 bg-gray-600 rounded-md" />
+                </div>
+              </div>
+            ) : (
             <>
               <div className="space-y-1">
                 <p className="text-xs text-gray-400 uppercase">Assunto</p>
@@ -325,7 +332,7 @@ export default function ChatLayout() {
                 </>
               )}
             </>
-            {/* )} */}
+            )}
           </CardContent>
         </Card>
       </section>
