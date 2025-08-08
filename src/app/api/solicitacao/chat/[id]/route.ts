@@ -105,6 +105,7 @@ export async function POST(
 
   const io = getIO();
   io.to(String(solicitacaoId)).emit("nova_mensagem", novaMensagem);
+  io.to("solicitacoes").emit("nova_mensagem", novaMensagem);
 
   return NextResponse.json(novaMensagem);
 }

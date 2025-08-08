@@ -74,11 +74,6 @@ export default function LoginPage() {
               aria-invalid={!!errors.email}
               aria-describedby="email-error"
             />
-            {errors.email && (
-              <p id="email-error" className="text-red-500 text-sm">
-                {errors.email.message}
-              </p>
-            )}
           </fieldset>
 
           <fieldset className="flex flex-col gap-2">
@@ -92,11 +87,6 @@ export default function LoginPage() {
               aria-invalid={!!errors.password}
               aria-describedby="password-error"
             />
-            {errors.password && (
-              <p id="password-error" className="text-red-500 text-sm">
-                {errors.password.message}
-              </p>
-            )}
           </fieldset>
 
           {error && <p className="text-red-500 text-sm">{error}</p>}

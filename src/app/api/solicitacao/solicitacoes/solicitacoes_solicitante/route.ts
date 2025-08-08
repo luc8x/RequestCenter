@@ -4,7 +4,10 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { writeFile } from "fs/promises";
 import { v4 as uuid } from "uuid";
+import { processarArquivo } from "@/lib/processarArquivoSolicitacao";
+import { getIO } from "@/lib/socket";
 import path from "path";
+import { string } from "zod";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -27,8 +30,6 @@ export async function POST(req: NextRequest) {
   const formData = await req.formData();
   const assunto = (formData.get("assunto") as string)?.trim();
   const descricao = (formData.get("descricao") as string)?.trim();
-
-  console.log('form: ',formData)
   
   if (!assunto || !descricao) {
     return NextResponse.json(
@@ -41,29 +42,20 @@ export async function POST(req: NextRequest) {
   const arquivo = arquivos[0];
   let arquivoUrl: string | null = null;
   let arquivoNome: string | null = null;
+  let analiseIA: string | null = null;
 
   if (arquivo && arquivo.size > 0) {
     if (!arquivo.type?.startsWith("image/")) {
       return NextResponse.json({ error: "Apenas imagens são permitidas." }, { status: 400 });
     }
     
-    const buffer = Buffer.from(await arquivo.arrayBuffer());
-    const ext = path.extname(arquivo.name);
-    const nomeArquivo = `${uuid()}${ext}`;
-    const uploadPath = path.join(process.cwd(), "public", "uploads", "solicitacoes");
-    
-    const fs = require('fs');
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
-    }
-
-    await writeFile(`${uploadPath}/${nomeArquivo}`, buffer);
-
-    arquivoUrl = `/uploads/solicitacoes/${nomeArquivo}`;
-    arquivoNome = arquivo.name;
+    const { nomeArquivo, urlArquivo, resultado } = await processarArquivo(arquivo);
+    arquivoUrl =  urlArquivo;
+    arquivoNome = nomeArquivo;
+    analiseIA = resultado;
   }
 
-  console.log(arquivoNome, arquivoUrl)
+
   const novaSolicitacao = await prisma.solicitacao.create({
     data: {
       assunto,
@@ -71,8 +63,15 @@ export async function POST(req: NextRequest) {
       userId: session.user.id,
       arquivoUrl,
       arquivoNome,
+      analiseIA,
     },
   });
+
+  const io = getIO();
+  // Emite para a sala específica da solicitação
+  io.to(String(novaSolicitacao.id)).emit("nova_solicitacao", novaSolicitacao);
+  // Emite para a sala de solicitações para atualizar a lista de atendentes
+  io.to("solicitacoes").emit("nova_solicitacao", novaSolicitacao);
 
   return NextResponse.json(novaSolicitacao, { status: 201 });
 }

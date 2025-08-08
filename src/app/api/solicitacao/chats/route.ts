@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
+import { ImageIcon, FileTextIcon } from 'lucide-react';
+
 export async function GET() {
   try {
     const chats = await prisma.solicitacao.findMany({
@@ -30,12 +32,29 @@ export async function GET() {
 
     const mensagens = chats.map((chat) => {
       const ultima = chat.mensagens[0];
+      let tipoMensagem = null
+
+      if (ultima && !ultima.conteudo) {
+        if (
+          ultima.arquivoNome &&
+          /\.(png|jpe?g)$/i.test(ultima.arquivoNome)
+        ) {
+          tipoMensagem = 1
+        } else if (
+          ultima.arquivoNome &&
+          /\.(pdf|docx|doc)$/i.test(ultima.arquivoNome)
+        ) {
+          tipoMensagem = 2
+        }
+      }
+
       return {
         id: chat.id,
         assunto: chat.assunto,
         name: ultima.autor.name,
         mensagem: ultima.conteudo || ultima.arquivoNome,
-        avatar: "https://github.com/shadcn.png",
+        tipo: tipoMensagem,
+        avatar: "",
       };
     });
 

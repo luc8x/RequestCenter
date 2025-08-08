@@ -6,24 +6,20 @@ import { useEffect, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
-import { Check, FileDown, Send, X } from 'lucide-react';
+import { Check, FileDown, Send, X, Eye, Loader2 } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { io, Socket } from "socket.io-client";
 import { Separator } from "@/components/ui/separator";
-import { Skeleton } from "@/components/ui/skeleton";
+import Head from "next/head";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { DialogClose } from "@radix-ui/react-dialog";
 
 export default function ChatLayout() {
   // Dados
@@ -31,6 +27,8 @@ export default function ChatLayout() {
   const solicitacaoId = params.id as string;
   const [dataSolicitacao, setData] = useState([]);
   const { data: session } = useSession();
+  const [imagePreloaded, setImagePreloaded] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   //Loadings
   const [loadingMensagens, setLoadingMensagens] = useState(true);
@@ -84,7 +82,15 @@ export default function ChatLayout() {
   }, [fetchSolicitacao]);
 
   useEffect(() => {
-    const socket = io({
+    if (dataSolicitacao?.arquivoUrl && dataSolicitacao.arquivoUrl.match(/\.(jpe?g|png|gif|webp)$/i)) {
+      const img = new Image();
+      img.src = dataSolicitacao.arquivoUrl;
+      img.onload = () => setImagePreloaded(true);
+    }
+  }, [dataSolicitacao]);
+
+  useEffect(() => {
+    const socket = io("http://localhost:3001", {
       path: "/api/socket_io",
     });
 
@@ -164,6 +170,11 @@ export default function ChatLayout() {
 
   return (
     <div className={`grid gap-6 grid-cols-1 md:grid-cols-[2fr_2fr] text-gray-100`}>
+      {dataSolicitacao?.arquivoUrl && dataSolicitacao.arquivoUrl.match(/\.(jpe?g|png|gif|webp)$/i) && (
+        <Head>
+          <link rel="preload" href={dataSolicitacao.arquivoUrl} as="image" />
+        </Head>
+      )}
       <section className='flex flex-col gap-4 col-span-1'>
         <Card>
           <CardHeader className="px-4 pt-4 pb-2 border-b border-blue-400">
@@ -225,113 +236,167 @@ export default function ChatLayout() {
                 </div>
               </div>
             ) : (
-            <>
-              <div className="space-y-1">
-                <p className="text-xs text-gray-400 uppercase">Assunto</p>
-                <p className="text-base font-medium text-white">{dataSolicitacao.assunto}</p>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-xs text-gray-400 uppercase">Descrição</p>
-                <p className="text-gray-300 whitespace-pre-line">{dataSolicitacao.descricao}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+              <>
                 <div className="space-y-1">
-                  <p className="text-xs text-gray-400 uppercase">Prioridade</p>
-                  <Badge variant="outline" className="text-white border-gray-400">
-                    {mapPrioridadeToLabel[dataSolicitacao?.prioridade as keyof typeof mapPrioridadeToLabel] ?? "Não informada"}
-                  </Badge>
+                  <p className="text-xs text-gray-400 uppercase">Assunto</p>
+                  <p className="text-base font-medium text-white">{dataSolicitacao.assunto}</p>
                 </div>
 
                 <div className="space-y-1">
-                  <p className="text-xs text-gray-400 uppercase">Status</p>
-                  <Badge
-                    variant="outline"
-                    className={cn("border", {
-                      "border-green-400 text-green-300": dataSolicitacao?.status === "FINALIZADA",
-                      "border-yellow-400 text-yellow-300": dataSolicitacao?.status === "EM_ATENDIMENTO",
-                      "border-red-400 text-red-300": dataSolicitacao?.status === "CANCELADA",
-                      "border-blue-400 text-blue-300": dataSolicitacao?.status === "ABERTA",
-                    })}
-                  >
-
-                    {mapStatusToLabel[dataSolicitacao?.status as keyof typeof mapStatusToLabel] ?? "Status desconhecido"}
-                  </Badge>
+                  <p className="text-xs text-gray-400 uppercase">Descrição</p>
+                  <p className="text-gray-300 whitespace-pre-line">{dataSolicitacao.descricao}</p>
                 </div>
-              </div>
 
-              <Separator className="my-2 bg-gray-600" />
-
-              <div className="space-y-1">
-                <p className="text-xs text-gray-400 uppercase">Solicitante</p>
-                <p className="text-white">{dataSolicitacao.user?.name}</p>
-                <p className="text-gray-400 text-xs">{dataSolicitacao.user?.email}</p>
-              </div>
-
-              <div className="space-y-1">
-                <p className="text-xs text-gray-400 uppercase">Atendente</p>
-                <p className="text-white">{dataSolicitacao.atendente?.name}</p>
-                <p className="text-gray-400 text-xs">{dataSolicitacao.atendente?.email}</p>
-              </div>
-              {dataSolicitacao.arquivoUrl && (
-                <>
-                  <Separator className="my-2 bg-gray-600" />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <p className="text-xs text-gray-400 uppercase">Prioridade</p>
+                    <Badge variant="outline" className="text-white border-gray-400">
+                      {mapPrioridadeToLabel[dataSolicitacao?.prioridade as keyof typeof mapPrioridadeToLabel] ?? "Não informada"}
+                    </Badge>
+                  </div>
 
                   <div className="space-y-1">
-                    <p className="text-xs text-gray-400 uppercase">Arquivo da Solicitação</p>
-                    <a href={dataSolicitacao.arquivoUrl} target="_blank" rel="noopener noreferrer">Visualizar</a>
+                    <p className="text-xs text-gray-400 uppercase">Status</p>
+                    <Badge
+                      variant="outline"
+                      className={cn("border", {
+                        "border-green-400 text-green-300": dataSolicitacao?.status === "FINALIZADA",
+                        "border-yellow-400 text-yellow-300": dataSolicitacao?.status === "EM_ATENDIMENTO",
+                        "border-red-400 text-red-300": dataSolicitacao?.status === "CANCELADA",
+                        "border-blue-400 text-blue-300": dataSolicitacao?.status === "ABERTA",
+                      })}
+                    >
+
+                      {mapStatusToLabel[dataSolicitacao?.status as keyof typeof mapStatusToLabel] ?? "Status desconhecido"}
+                    </Badge>
                   </div>
-                </>
-              )}
+                </div>
 
-              <Separator className="my-2 bg-gray-600" />
+                <Separator className="my-2 bg-gray-600" />
+                {session?.user?.permissao === 'ATENDENTE' && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-gray-400 uppercase">Solicitante</p>
+                    <p className="text-white">{dataSolicitacao.user?.name}</p>
+                    <p className="text-gray-400 text-xs">{dataSolicitacao.user?.email}</p>
+                  </div>
+                )}
 
-              <div className="text-xs text-gray-400 space-y-1">
-                <p>
-                  Criado em:{" "}
-                  <span className="text-white">
-                    {dayjs(dataSolicitacao?.createdAt).format("DD/MM/YYYY HH:mm")}
-                  </span>
-                </p>
-                <p>
-                  Atualizado em:{" "}
-                  <span className="text-white">
-                    {dayjs(dataSolicitacao?.updatedAt).format("DD/MM/YYYY HH:mm")}
-                  </span>
-                </p>
-              </div>
+                {session?.user?.permissao === 'SOLICITANTE' && (
+                  <div className="space-y-1">
+                    <p className="text-xs text-gray-400 uppercase">Atendente</p>
+                    <p className="text-white">{dataSolicitacao.atendente?.name}</p>
+                    <p className="text-gray-400 text-xs">{dataSolicitacao.atendente?.email}</p>
+                  </div>
+                )}
 
-              {session?.user?.permissao === 'ATENDENTE' &&
-              dataSolicitacao?.status !== 'FINALIZADA' &&
-              dataSolicitacao?.status !== 'CANCELADA' && (
-                <>
-                  <Separator className="my-2 bg-gray-600" />
+                {dataSolicitacao.arquivoUrl && (
+                  <>
+                    <Separator className="my-2 bg-gray-600" />
 
-                  <div className="text-xs text-gray-400 space-y-1 flex flex-col gap-1.5">
-                    <p>AÇÕES</p>
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        variant="success"
-                        onClick={() => handleStatusChange("FINALIZADA")}
-                      >
-                        <Check className="w-4 h-4 mr-1" />
-                        Resolvido
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        onClick={() => handleStatusChange("CANCELADA")}
-                      >
-                        <X className="w-4 h-4 mr-1" />
-                        Cancelado
-                      </Button>
+                    <div className="space-y-1">
+                      <p className="text-xs text-gray-400 uppercase">Arquivo da Solicitação</p>
+                      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                        <DialogTrigger>
+                          <Button
+                            variant="link"
+                            className="p-0 h-auto text-blue-400 hover:text-blue-300"
+                            onClick={() => {
+                              if (dataSolicitacao.arquivoUrl.match(/\.(jpe?g|png|gif|webp)$/i) && !imagePreloaded) {
+                                const img = new Image();
+                                img.src = dataSolicitacao.arquivoUrl;
+                                img.onload = () => {
+                                  setImagePreloaded(true);
+                                  setDialogOpen(true);
+                                };
+                              } else {
+                                setDialogOpen(true);
+                              }
+                              return false;
+                            }}
+                          >
+                            <Eye className="w-4 h-4 mr-1" /> Visualizar
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl max-h-[90vh] bg-transparent border-0 overflow-auto p-0" showCloseButton={false}>
+                          {dataSolicitacao.arquivoUrl.match(/\.(jpe?g|png|gif|webp)$/i) ? (
+                            <div className="relative w-full flex items-center justify-center">
+                              {!imagePreloaded && (
+                                <div className="absolute inset-0 flex items-center justify-center bg-background/50">
+                                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                                </div>
+                              )}
+                              <img
+                                src={dataSolicitacao.arquivoUrl}
+                                alt="Arquivo da solicitação"
+                                className="w-full h-auto object-contain max-h-[80vh]"
+                                style={{ opacity: imagePreloaded ? 1 : 0.3 }}
+                                onLoad={() => setImagePreloaded(true)}
+                              />
+                            </div>
+                          ) : (
+                            <iframe
+                              src={dataSolicitacao.arquivoUrl}
+                              className="w-full"
+                              title="Visualização do arquivo"
+                            />
+                          )}
+                          <DialogClose className="absolute top-4 right-4">
+                            <X className="w-8 h-8 text-white" />
+                          </DialogClose>
+                        </DialogContent>
+                      </Dialog>
+                      <p>{dataSolicitacao.analiseIA}</p>
                     </div>
-                  </div>
-                </>
-              )}
-            </>
+                  </>
+                )}
+
+                <Separator className="my-2 bg-gray-600" />
+
+                <div className="text-xs text-gray-400 space-y-1">
+                  <p>
+                    Criado em:{" "}
+                    <span className="text-white">
+                      {dayjs(dataSolicitacao?.createdAt).format("DD/MM/YYYY HH:mm")}
+                    </span>
+                  </p>
+                  <p>
+                    Atualizado em:{" "}
+                    <span className="text-white">
+                      {dayjs(dataSolicitacao?.updatedAt).format("DD/MM/YYYY HH:mm")}
+                    </span>
+                  </p>
+                </div>
+
+                {session?.user?.permissao === 'ATENDENTE' &&
+                  dataSolicitacao?.status !== 'FINALIZADA' &&
+                  dataSolicitacao?.status !== 'CANCELADA' && (
+                    <>
+                      <Separator className="my-2 bg-gray-600" />
+
+                      <div className="text-xs text-gray-400 space-y-1 flex flex-col gap-1.5">
+                        <p>AÇÕES</p>
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="success"
+                            onClick={() => handleStatusChange("FINALIZADA")}
+                          >
+                            <Check className="w-4 h-4 mr-1" />
+                            Resolvido
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            onClick={() => handleStatusChange("CANCELADA")}
+                          >
+                            <X className="w-4 h-4 mr-1" />
+                            Cancelado
+                          </Button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+              </>
             )}
           </CardContent>
         </Card>
@@ -405,8 +470,11 @@ export default function ChatLayout() {
                   >
                     {!isSelf && (
                       <Avatar className="w-8 h-8 ring-1 ring-blue-400">
-                        <AvatarFallback className="bg-blue-800 text-white text-xs">
-                          {msg.autor?.name?.slice(0, 2)?.toUpperCase() ?? "US"}
+                        <AvatarFallback className="bg-blue-700 text-white text-xs">
+                          <div className="text-sm font-semibold leading-none">
+                            {msg.autor.name?.[0] ?? "U"}
+                            {msg.autor.name?.split(" ")?.[1]?.[0] ?? "S"}
+                          </div>
                         </AvatarFallback>
                       </Avatar>
                     )}
@@ -415,10 +483,12 @@ export default function ChatLayout() {
                       layout
                       className={cn(
                         "rounded-2xl px-2 py-2 max-w-xs w-full shadow-md space-y-2 flex flex-col",
-                        isSelf ? "bg-blue-600" : "bg-gray-700"
+                        isSelf ? "bg-blue-800" : "bg-gray-700"
                       )}
                     >
-                      <div className="text-sm font-semibold leading-none">{msg.autor.name}</div>
+                      <div className="text-sm font-semibold leading-none">
+                        {msg.autor.name}
+                      </div>
                       {msg.arquivoUrl && (
                         <div className="mt-2">
                           {msg.arquivoUrl.match(/\.(jpe?g|png|gif|webp)$/i) ? (

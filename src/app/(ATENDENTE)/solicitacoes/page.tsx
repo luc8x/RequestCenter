@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -13,18 +13,16 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  Card,
-} from "@/components/ui/card";
 import { Solicitacao } from "@/components/solicitacoes/types";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { MessageSquareShare } from "lucide-react";
+import { io, Socket } from "socket.io-client";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import ChatRecentes from "@/components/chat/chatRecentes";
 export default function SolicitacaoPage() {
   const [dataSolicitacaoAberto, setSolicitacaoAberto] = useState<Solicitacao[]>([]);
   const [dataSolicitacaoConcluidas, setSolicitacaoConcluidas] = useState<Solicitacao[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingChat, setLoadingChat] = useState(true);
-  const [dataChat, setDataChat] = useState([]);
+  const socketRef = useRef<Socket | null>(null);
 
   const fetchSolicitacoesAberto = useCallback(async () => {
     try {
@@ -74,33 +72,33 @@ export default function SolicitacaoPage() {
     }
   }, []);
 
-  const fetchChats = useCallback(async () => {
-    try {
-      setLoadingChat(true);
+  useEffect(() => {
+    const socket = io("http://localhost:3001", {
+      path: "/api/socket_io",
+    });
 
-      const res = await fetch("/api/solicitacao/chats", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+    socketRef.current = socket;
+
+    socket.emit("solicitacoes");
+
+    socket.on("nova_solicitacao", (solicitacao) => {
+      setSolicitacaoAberto((prev) => {
+        if (prev.some(s => s.id === solicitacao.id)) {
+          return prev;
+        }
+        return [...prev, solicitacao];
       });
+    });
 
-      if (!res.ok) throw new Error();
-
-      const json = await res.json();
-      setDataChat(json);
-    } catch {
-      toast.error("Erro ao buscar chats.");
-    } finally {
-      setLoadingChat(false);
-    }
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   useEffect(() => {
     fetchSolicitacoesAberto();
     fetchSolicitacaoConcluidas();
-    fetchChats();
-  }, [fetchSolicitacoesAberto, fetchChats, fetchSolicitacaoConcluidas]);
+  }, [fetchSolicitacoesAberto, fetchSolicitacaoConcluidas]);
 
   const router = useRouter();
 
@@ -116,7 +114,7 @@ export default function SolicitacaoPage() {
       }
 
       toast.success("Solicitação atribuída com sucesso!");
-      await router.push(`/atendimento/${solicitacaoId}`);
+      await router.push(`/chat/${solicitacaoId}`);
     } catch (err) {
       console.error(err);
       toast.error("Falha ao assumir a solicitação.");
@@ -152,13 +150,13 @@ export default function SolicitacaoPage() {
           ) : dataSolicitacaoAberto.length === 0 ? (
             <p className="text-sm text-gray-400">Nenhuma solicitação encontrada.</p>
           ) : (
-            <div className="max-h-80 overflow-auto flex flex-col gap-4 pr-1">
+            <ScrollArea className="max-h-80 rounded-md flex flex-col">
               {dataSolicitacaoAberto.map((solicitacao) => (
                 <Dialog key={solicitacao.id}>
                   <DialogTrigger asChild>
                     <div
                       key={solicitacao.id}
-                      className="rounded-xl p-4 bg-gray-700 hover:bg-gray-600 transition-colors flex justify-between items-start cursor-pointer"
+                      className="rounded-xl p-4 bg-gray-700 hover:bg-gray-600 transition-colors flex justify-between items-start cursor-pointer mb-4"
                     >
                       <div>
                         <h4 className="text-base font-semibold text-white">{solicitacao.assunto}</h4>
@@ -205,7 +203,7 @@ export default function SolicitacaoPage() {
                 </Dialog>
 
               ))}
-            </div>
+            </ScrollArea>
           )}
         </div>
 
@@ -231,13 +229,13 @@ export default function SolicitacaoPage() {
           ) : dataSolicitacaoConcluidas.length === 0 ? (
             <p className="text-sm text-gray-400">Nenhuma solicitação encontrada.</p>
           ) : (
-            <div className="max-h-80 overflow-auto flex flex-col gap-4 pr-1">
+            <ScrollArea className="max-h-80 rounded-md flex flex-col">
               {dataSolicitacaoConcluidas.map((solicitacao) => (
                 <Dialog key={solicitacao.id}>
                   <DialogTrigger asChild>
                     <div
                       key={solicitacao.id}
-                      className="rounded-xl p-4 bg-gray-700 hover:bg-gray-600 transition-colors flex justify-between items-start cursor-pointer"
+                      className="rounded-xl p-4 bg-gray-700 hover:bg-gray-600 transition-colors flex justify-between items-start cursor-pointer mb-4"
                     >
                       <div>
                         <h4 className="text-base font-semibold text-white">{solicitacao.assunto}</h4>
@@ -286,73 +284,13 @@ export default function SolicitacaoPage() {
                 </Dialog>
 
               ))}
-            </div>
+            </ScrollArea>
           )}
         </div>
       </section>
 
       {/* Chats */}
-      <section>
-        {loadingChat ? (
-          <Card>
-            <h3 className="font-semibold mb-4 text-blue-400">Chats em Andamento</h3>
-            <div className="flex flex-col gap-5">
-              <div className="max-h-80 overflow-auto flex flex-col gap-4 pr-1">
-                {[...Array(3)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="rounded-xl p-4 bg-gray-700 animate-pulse flex justify-between items-start"
-                  >
-                    <div className="space-y-2 w-full">
-                      <div className="h-4 bg-gray-500 rounded w-1/3" />
-                      <div className="h-3 bg-gray-600 rounded w-1/2" />
-                      <div className="h-3 bg-gray-600 rounded w-1/4" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </Card>
-
-        ) : dataChat.length > 0 ? (
-          <Card>
-            <h3 className="font-semibold mb-4 text-blue-400">Chats em Andamento</h3>
-            <div className="max-h-80 overflow-auto flex flex-col gap-4 pr-1">
-              {dataChat.map((item) => (
-                <div key={item.id} className="flex flex-col gap-5 rounded-xl p-4 bg-gray-700 hover:bg-gray-600 transition-colors cursor-pointer">
-                  <a
-                    key={item.id}
-                    href={`/atendimento/${item.id}/`}
-                    className="flex items-start gap-2 flex-col"
-                  >
-                    <span><strong>{item.assunto}</strong></span>
-                    <div className="flex gap-4">
-                      <Avatar>
-                        <AvatarImage src={item.avatar} />
-                        <AvatarFallback>
-                          {item.name?.slice(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col leading-5">
-                        <span className="font-medium">{item.name}</span>
-                        <span className="text-sm text-gray-400">{item.mensagem}</span>
-                      </div>
-                    </div>
-                  </a>
-                </div>
-              ))}
-            </div>
-          </Card>
-        ) : (
-          <Card>
-            <h3 className="font-semibold mb-4 text-blue-400">Chat recente</h3>
-            <div className="max-h-80 overflow-auto flex flex-col gap-4 pr-1">
-              <p className="text-gray-400 text-sm">Nenhum chat em andamento.</p>
-            </div>
-          </Card>
-        )}
-
-      </section>
+      <ChatRecentes/>
     </div>
 
   );

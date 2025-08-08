@@ -5,7 +5,7 @@ z.setErrorMap(customZodErrorMap);
 
 export const loginSchema = z.object({
   email: z.string().email({ message: "E-mail inválido. Verifique o formato (ex: nome@dominio.com)" }),
-  password: z.string().min(6),
+  password: z.string(),
 })
 
 export const registerSchema = loginSchema.extend({

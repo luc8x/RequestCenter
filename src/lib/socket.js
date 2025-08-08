@@ -8,23 +8,32 @@ export function setIO(server) {
     return io;
   }
 
+  // io = new IOServer(server, {
+  //   path: "/api/socket_io",
+  //   cors: {
+  //     origin: "*",
+  //     methods: ["GET", "POST"],
+  //   },
+  // });
+
   io = new IOServer(server, {
-    path: "/api/socket_io",
-    cors: {
-      origin: "*",
-      methods: ["GET", "POST"],
-    },
+    cors: { origin: "http://localhost:3000" },
+    path: "/api/socket_io"
   });
 
   io.on("connection", (socket) => {
-    console.log("WebSocket - Novo cliente conectado!");
+    console.log("WebSocket - Novo cliente conectado!", socket.id);
 
     socket.on("join_chat", (chatId) => {
       socket.join(chatId);
     });
 
+    socket.on("solicitacoes", () => {
+      socket.join("solicitacoes");
+    });
+
     socket.on("disconnect", () => {
-      console.error("WebSocket - Cliente desconectado");
+      console.log("WebSocket - Cliente desconectado", socket.id);
     });
   });
 
