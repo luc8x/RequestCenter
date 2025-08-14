@@ -14,8 +14,6 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  console.log(permissao)
-
   if (isAutenticado && isAuthPage) {
     if (permissao === "SOLICITANTE") {
       return NextResponse.redirect(new URL("/inicio", req.url));

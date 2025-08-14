@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -45,9 +46,7 @@ model Solicitacao {
   status      Status     @default(ABERTA)
   userId      String
   atendenteId String?
-  arquivoUrl    String?
-  arquivoNome   String?
-  analiseIA   String?
+  token String @unique
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
@@ -57,6 +56,18 @@ model Solicitacao {
   user      User       @relation("Solicitante", fields: [userId], references: [id])
   atendente User?      @relation("Atendente", fields: [atendenteId], references: [id])
   mensagens Mensagem[] @relation("SolicitacaoMensagem") // lado oposto de `solicitacao`
+  arquivos  ArquivoSolicitacao[] @relation("SolicitacaoArquivos")
+}
+
+model ArquivoSolicitacao {
+  id            Int      @id @default(autoincrement())
+  arquivoBase64 String   @db.Text
+  arquivoNome   String
+  analiseIA     String?
+  createdAt     DateTime @default(now())
+  solicitacaoId Int
+
+  solicitacao Solicitacao @relation("SolicitacaoArquivos", fields: [solicitacaoId], references: [id], onDelete: Cascade)
 }
 
 enum Prioridade {

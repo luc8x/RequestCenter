@@ -11,15 +11,15 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
-import { Check, FileDown, Send, X, Eye, Loader2 } from 'lucide-react';
+import { Check, FileDown, Send, X, Eye, Minimize2, Maximize2, Move } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
 import { io, Socket } from "socket.io-client";
 import { Separator } from "@/components/ui/separator";
-import Head from "next/head";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { DialogClose } from "@radix-ui/react-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import Image from 'next/image'
 
 export default function ChatLayout() {
   // Dados
@@ -27,8 +27,13 @@ export default function ChatLayout() {
   const solicitacaoId = params.id as string;
   const [dataSolicitacao, setData] = useState([]);
   const { data: session } = useSession();
-  const [imagePreloaded, setImagePreloaded] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
+  // const [dialogOpen, setDialogOpen] = useState(false);
+  
+  // Estados para modo flutuante
+  const [isFloating, setIsFloating] = useState(false);
+  const [floatingPosition, setFloatingPosition] = useState({ x: 20, y: 20 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
   //Loadings
   const [loadingMensagens, setLoadingMensagens] = useState(true);
@@ -75,19 +80,11 @@ export default function ChatLayout() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [solicitacaoId]);
 
   useEffect(() => {
     fetchSolicitacao();
   }, [fetchSolicitacao]);
-
-  useEffect(() => {
-    if (dataSolicitacao?.arquivoUrl && dataSolicitacao.arquivoUrl.match(/\.(jpe?g|png|gif|webp)$/i)) {
-      const img = new Image();
-      img.src = dataSolicitacao.arquivoUrl;
-      img.onload = () => setImagePreloaded(true);
-    }
-  }, [dataSolicitacao]);
 
   useEffect(() => {
     const socket = io("http://localhost:3001", {
@@ -168,19 +165,227 @@ export default function ChatLayout() {
     }
   };
 
+  // Funções para arrastar o chat flutuante
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    setDragOffset({
+      x: e.clientX - floatingPosition.x,
+      y: e.clientY - floatingPosition.y
+    });
+  };
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isDragging) return;
+    
+    // Usa clientX/clientY para movimento dentro da viewport
+    const newX = e.clientX - dragOffset.x;
+    const newY = e.clientY - dragOffset.y;
+    
+    // Garante que a janela não saia completamente da viewport
+    const minX = -300; // Permite que 100px da janela fique visível
+    const minY = 0;
+    const maxX = window.innerWidth - 100;
+    const maxY = window.innerHeight - 100;
+    
+    setFloatingPosition({
+      x: Math.max(minX, Math.min(maxX, newX)),
+      y: Math.max(minY, Math.min(maxY, newY))
+    });
+  }, [isDragging, dragOffset]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }
+  }, [isDragging, handleMouseMove, handleMouseUp]);
+
+  if (isFloating) {
+    return (
+      <>
+        {/* Portal para renderizar fora do DOM da aplicação */}
+        {typeof window !== 'undefined' && (
+          <div 
+            className="fixed bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-lg shadow-2xl resize overflow-hidden"
+            style={{
+              left: floatingPosition.x,
+              top: floatingPosition.y,
+              width: '400px',
+              height: '600px',
+              minWidth: '350px',
+              minHeight: '400px',
+              maxWidth: '600px',
+              maxHeight: '800px',
+              zIndex: 2147483647, // Valor máximo para z-index
+              position: 'fixed'
+            }}
+          >
+            {/* Header do chat flutuante */}
+            <div 
+              className="flex items-center justify-between p-3 bg-gray-800/50 border-b border-gray-700 cursor-move select-none"
+              onMouseDown={handleMouseDown}
+            >
+              <div className="flex items-center gap-2">
+                <Move className="w-4 h-4 text-gray-400" />
+                <span className="text-sm font-medium text-white truncate">
+                  Chat - {dataSolicitacao?.assunto || 'Carregando...'}
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsFloating(false)}
+                  className="h-8 w-8 p-0 hover:bg-gray-700/50"
+                >
+                  <Maximize2 className="w-4 h-4 text-gray-400" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Conteúdo do chat flutuante com layout fixo */}
+            <div className="flex flex-col h-[calc(100%-60px)]">
+              {/* Área de mensagens com scroll */}
+              <div className="flex-1 overflow-y-auto p-3 space-y-3 text-sm">
+                {loadingMensagens ? (
+                  <div className="animate-pulse space-y-3">
+                    {[...Array(3)].map((_, i) => (
+                      <div key={i} className="flex gap-2">
+                        <div className="w-8 h-8 bg-gray-600 rounded-full" />
+                        <div className="flex-1 space-y-1">
+                          <div className="w-20 h-3 bg-gray-600 rounded" />
+                          <div className="w-full h-4 bg-gray-600 rounded" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : mensagens.length > 0 ? (
+                  mensagens.map((mensagem: any, index: number) => {
+                    const isUser = mensagem.usuario?.id === session?.user?.id;
+                    return (
+                      <motion.div
+                        key={mensagem.id}
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                        className={cn(
+                          "flex gap-2 max-w-[85%]",
+                          isUser ? "ml-auto flex-row-reverse" : "mr-auto"
+                        )}
+                      >
+                        <div
+                          className={cn(
+                            "rounded-lg px-3 py-2 text-sm break-words",
+                            isUser
+                              ? "bg-blue-600 text-white"
+                              : "bg-gray-700 text-gray-100"
+                          )}
+                        >
+                          <div className="flex flex-col gap-1">
+                            <p className="whitespace-pre-wrap">{mensagem.conteudo}</p>
+                            {mensagem.arquivoUrl && (
+                              <div className="mt-2">
+                                <a
+                                  href={mensagem.arquivoUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-xs text-blue-300 hover:text-blue-200 underline"
+                                >
+                                  <FileDown className="w-3 h-3" />
+                                  {mensagem.nomeOriginalArquivo || "Arquivo"}
+                                </a>
+                              </div>
+                            )}
+                            <span className="text-xs opacity-70">
+                              {dayjs(mensagem.criadoEm).format("DD/MM/YYYY HH:mm")}
+                            </span>
+                          </div>
+                        </div>
+                        <Avatar className="w-6 h-6 flex-shrink-0">
+                          <AvatarFallback className="text-xs bg-gray-600 text-gray-200">
+                            {mensagem.usuario?.nome?.charAt(0)?.toUpperCase() || "?"}
+                          </AvatarFallback>
+                        </Avatar>
+                      </motion.div>
+                    );
+                  })
+                ) : (
+                  <p className="text-gray-400 text-xs text-center">Nenhuma mensagem encontrada.</p>
+                )}
+                <div ref={chatEndRef} />
+              </div>
+
+              {/* Input fixo na parte inferior */}
+              <div className="border-t border-gray-700 p-3 bg-gray-900/50 backdrop-blur-sm">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleEnviar();
+                  }}
+                  className="flex items-center gap-2 w-full"
+                  encType="multipart/form-data"
+                >
+                  {arquivo && (
+                    <span className="text-xs text-gray-400 truncate max-w-[100px]">{arquivo.name}</span>
+                  )}
+
+                  <input
+                    type="file"
+                    id="upload-floating"
+                    className="hidden"
+                    onChange={(e) => setArquivo(e.target.files?.[0] ?? null)}
+                  />
+                  <label htmlFor="upload-floating" className="bg-secondary p-1.5 text-black rounded-md cursor-pointer flex-shrink-0">
+                    <FileDown size={16} />
+                  </label>
+
+                  <Input
+                    placeholder="Digite sua mensagem..."
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    className="flex-1 text-white placeholder:text-gray-400/70 border-gray-600 focus:ring-gray-400 focus:border-gray-400 text-sm"
+                  />
+
+                  <Button type="submit" variant="secondary" size="sm" disabled={!input.trim() && !arquivo} className="flex-shrink-0">
+                    <Send className="w-3 h-3" />
+                  </Button>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+      </>
+    );
+  }
+
   return (
     <div className={`grid gap-6 grid-cols-1 md:grid-cols-[2fr_2fr] text-gray-100`}>
-      {dataSolicitacao?.arquivoUrl && dataSolicitacao.arquivoUrl.match(/\.(jpe?g|png|gif|webp)$/i) && (
-        <Head>
-          <link rel="preload" href={dataSolicitacao.arquivoUrl} as="image" />
-        </Head>
-      )}
       <section className='flex flex-col gap-4 col-span-1'>
         <Card>
           <CardHeader className="px-4 pt-4 pb-2 border-b border-blue-400">
-            <CardTitle className="text-lg font-semibold text-blue-400">
-              Informações da Solicitação
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-semibold text-blue-400">
+                Informações da Solicitação
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsFloating(true)}
+                className="text-gray-400 hover:text-white hover:bg-gray-700/50"
+                title="Modo flutuante"
+              >
+                <Minimize2 className="w-4 h-4" />
+              </Button>
+            </div>
           </CardHeader>
 
           <CardContent className="flex-1 overflow-y-auto space-y-5 py-6 px-4 text-sm">
@@ -250,7 +455,7 @@ export default function ChatLayout() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <p className="text-xs text-gray-400 uppercase">Prioridade</p>
-                    <Badge variant="outline" className="text-white border-gray-400">
+                    <Badge variant="outline" className="text-gray-300 border-gray-400">
                       {mapPrioridadeToLabel[dataSolicitacao?.prioridade as keyof typeof mapPrioridadeToLabel] ?? "Não informada"}
                     </Badge>
                   </div>
@@ -264,6 +469,7 @@ export default function ChatLayout() {
                         "border-yellow-400 text-yellow-300": dataSolicitacao?.status === "EM_ATENDIMENTO",
                         "border-red-400 text-red-300": dataSolicitacao?.status === "CANCELADA",
                         "border-blue-400 text-blue-300": dataSolicitacao?.status === "ABERTA",
+                        "border-gray-400 text-gray-300": !dataSolicitacao?.status,
                       })}
                     >
 
@@ -289,66 +495,88 @@ export default function ChatLayout() {
                   </div>
                 )}
 
-                {dataSolicitacao.arquivoUrl && (
+                {dataSolicitacao.arquivos && dataSolicitacao.arquivos.length > 0 && (
                   <>
                     <Separator className="my-2 bg-gray-600" />
-
                     <div className="space-y-1">
-                      <p className="text-xs text-gray-400 uppercase">Arquivo da Solicitação</p>
-                      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+                      <p className="text-xs text-gray-400 uppercase">Arquivos da Solicitação</p>
+
+                      <Dialog>
                         <DialogTrigger>
-                          <Button
-                            variant="link"
-                            className="p-0 h-auto text-blue-400 hover:text-blue-300"
-                            onClick={() => {
-                              if (dataSolicitacao.arquivoUrl.match(/\.(jpe?g|png|gif|webp)$/i) && !imagePreloaded) {
-                                const img = new Image();
-                                img.src = dataSolicitacao.arquivoUrl;
-                                img.onload = () => {
-                                  setImagePreloaded(true);
-                                  setDialogOpen(true);
-                                };
-                              } else {
-                                setDialogOpen(true);
-                              }
-                              return false;
-                            }}
-                          >
-                            <Eye className="w-4 h-4 mr-1" /> Visualizar
-                          </Button>
+                          <span className="flex items-center gap-2 p-0 h-auto text-blue-400 hover:text-blue-300 text-decoration-underline">
+                            <Eye className="w-4 h-4 mr-1 " /> Visualizar {dataSolicitacao.arquivos.length} Arquivos
+                          </span>
                         </DialogTrigger>
-                        <DialogContent className="max-w-4xl max-h-[90vh] bg-transparent border-0 overflow-auto p-0" showCloseButton={false}>
-                          {dataSolicitacao.arquivoUrl.match(/\.(jpe?g|png|gif|webp)$/i) ? (
-                            <div className="relative w-full flex items-center justify-center">
-                              {!imagePreloaded && (
-                                <div className="absolute inset-0 flex items-center justify-center bg-background/50">
-                                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                                </div>
-                              )}
-                              <img
-                                src={dataSolicitacao.arquivoUrl}
-                                alt="Arquivo da solicitação"
-                                className="w-full h-auto object-contain max-h-[80vh]"
-                                style={{ opacity: imagePreloaded ? 1 : 0.3 }}
-                                onLoad={() => setImagePreloaded(true)}
-                              />
-                            </div>
-                          ) : (
-                            <iframe
-                              src={dataSolicitacao.arquivoUrl}
-                              className="w-full"
-                              title="Visualização do arquivo"
-                            />
-                          )}
-                          <DialogClose className="absolute top-4 right-4">
-                            <X className="w-8 h-8 text-white" />
+
+                        <DialogContent className="min-w-[84vw] max-h-[90vh] bg-gray-900/95 backdrop-blur-sm border border-gray-700 overflow-hidden p-0" showCloseButton={false}>
+                          <DialogHeader className="px-6 pt-6 text-white">
+                            <DialogTitle>Sugestão da IA</DialogTitle>
+                            <DialogDescription className="text-gray-300">
+                              Após uma análise criteriosa, a IA sugeriu a seguinte solução:
+                            </DialogDescription>
+                          </DialogHeader>
+                          <DialogClose className="absolute top-4 right-4 rounded-full bg-gray-800/80 hover:bg-gray-700/80 p-2 transition-colors">
+                            <X className="w-6 h-6 text-gray-300 hover:text-white" />
                           </DialogClose>
+
+                          <div className="flex-1 flex flex-col items-center justify-center p-8">
+                            <Carousel className="w-full max-w-[75vw] relative">
+                              <CarouselContent>
+                                {dataSolicitacao.arquivos.map((arquivo, index) => (
+                                  <CarouselItem key={arquivo.id}>
+                                    <div className="flex flex-col items-center space-y-6">
+                                      <div className="relative w-full flex items-center justify-center rounded-xl shadow-2xl overflow-hidden group">
+                                        <Image
+                                          src={arquivo.arquivoBase64}
+                                          alt={`Arquivo ${index + 1}`}
+                                          className="w-full h-auto object-contain max-h-[65vh] transition-transform duration-300"
+                                          width={1200}
+                                          height={1200}
+                                          priority
+                                          quality={100}
+                                        />
+                                      </div>
+
+                                      <div className="w-full max-w-4xl text-center">
+                                        <div className="text-gray-300 text-sm leading-relaxed px-6 py-4 bg-gray-800/30 rounded-lg border border-gray-700/50 min-h-[80px] max-h-[200px] overflow-y-auto">
+                                          <div className="whitespace-pre-wrap break-words">
+                                            {arquivo.analiseIA || "Análise ainda não concluída"}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </CarouselItem>
+                                ))}
+
+                              </CarouselContent>
+                              {/* Botões centralizados abaixo da imagem */}
+                              {dataSolicitacao.arquivos.length > 1 && (
+                                <>
+                                  <CarouselPrevious className="bg-gray-800/90 hover:bg-gray-700/90 border-gray-600 text-gray-300 hover:text-white w-12 h-12 shadow-lg rounded-full transform transition-transform duration-300 hover:scale-110" />
+                                  <CarouselNext className="bg-gray-800/90 hover:bg-gray-700/90 border-gray-600 text-gray-300 hover:text-white w-12 h-12 shadow-lg rounded-full transform transition-transform duration-300 hover:scale-110" />
+                                </>
+                              )}
+                            </Carousel>
+                          </div>
+
+
+
+                          {dataSolicitacao.arquivos.length > 1 && (
+                            <div className="flex justify-center space-x-2 pb-6">
+                              {dataSolicitacao.arquivos.map((_, index) => (
+                                <div
+                                  key={index}
+                                  className="w-2 h-2 rounded-full bg-gray-600 transition-colors duration-200 hover:bg-gray-400"
+                                />
+                              ))}
+                            </div>
+                          )}
                         </DialogContent>
                       </Dialog>
-                      <p>{dataSolicitacao.analiseIA}</p>
                     </div>
                   </>
                 )}
+
 
                 <Separator className="my-2 bg-gray-600" />
 
@@ -378,7 +606,7 @@ export default function ChatLayout() {
                         <div className="flex gap-2">
                           <Button
                             type="button"
-                            variant="success"
+                            variant="outline"
                             onClick={() => handleStatusChange("FINALIZADA")}
                           >
                             <Check className="w-4 h-4 mr-1" />
@@ -498,7 +726,7 @@ export default function ChatLayout() {
                               rel="noopener noreferrer"
                               className="underline"
                             >
-                              <img
+                              <Image
                                 src={msg.arquivoUrl}
                                 alt="Arquivo"
                                 className="w-full h-auto rounded-lg object-contain"

@@ -13,7 +13,7 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Solicitacao } from "@/components/solicitacoes/types";
+import { Solicitacao } from "@/components/solicitacao/types";
 import { MessageSquareShare } from "lucide-react";
 import { io, Socket } from "socket.io-client";
 import { ScrollArea } from "@/components/ui/scroll-area";

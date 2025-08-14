@@ -8,14 +8,6 @@ export function setIO(server) {
     return io;
   }
 
-  // io = new IOServer(server, {
-  //   path: "/api/socket_io",
-  //   cors: {
-  //     origin: "*",
-  //     methods: ["GET", "POST"],
-  //   },
-  // });
-
   io = new IOServer(server, {
     cors: { origin: "http://localhost:3000" },
     path: "/api/socket_io"

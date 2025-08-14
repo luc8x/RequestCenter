@@ -1,7 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-
-import { ImageIcon, FileTextIcon } from 'lucide-react';
+import { prisma } from "@/lib/prisma/prisma";
 
 export async function GET() {
   try {

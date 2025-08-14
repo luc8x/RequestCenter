@@ -7,7 +7,7 @@ import { io, Socket } from "socket.io-client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import "dayjs/locale/pt-br";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Image, File } from 'lucide-react';
+import { Image as IconImagem, File } from 'lucide-react';
 
 export default function ChatRecentes() {
     const [loadingChat, setLoadingChat] = useState(true);
@@ -91,26 +91,27 @@ export default function ChatRecentes() {
                                         <Avatar className="w-9 h-9">
                                             <AvatarImage src={item?.avatar ?? "/avatar-placeholder.png"} />
                                             <AvatarFallback className="text-black">
-                                                {item.name?.slice(0, 2).toUpperCase()}
+                                                {item.name?.[0] ?? "U"}
+                                                {item.name?.split(" ")?.[1]?.[0] ?? "S"}
                                             </AvatarFallback>
                                         </Avatar>
                                         <div className="flex flex-col leading-7">
                                             <span className="font-medium">{item.name}</span>
-                                                <div className="flex gap-1.5 items-center">
-                                                    {item.tipo && (
-                                                        <span className="text-sm text-gray-400">
-                                                            {item.tipo == 1 ? (
-                                                                <Image size={16} />
+                                            <div className="flex gap-1.5 items-center">
+                                                {item.tipo && (
+                                                    <span className="text-sm text-gray-400">
+                                                        {item.tipo == 1 ? (
+                                                            <IconImagem size={16} />
 
-                                                            ) : item.tipo == 2 ? (
-                                                                <File size={16} />
-                                                            ) : (
-                                                                ''
-                                                            )}
-                                                        </span>
-                                                    )}
-                                                    <span className="text-sm text-gray-400">{item.mensagem}</span>
-                                                </div>
+                                                        ) : item.tipo == 2 ? (
+                                                            <File size={16} />
+                                                        ) : (
+                                                            ''
+                                                        )}
+                                                    </span>
+                                                )}
+                                                <span className="text-sm text-gray-400">{item.mensagem}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </a>

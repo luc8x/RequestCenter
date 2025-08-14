@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma/prisma";
 import { authOptions } from "@/lib/auth";
 
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
@@ -49,6 +49,8 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     include: {
       user: true,
       atendente: true,
+      arquivos: true,
+
     },
   });
 
@@ -81,9 +83,27 @@ export async function PATCH(req: Request) {
   if (isNaN(id)) {
     return NextResponse.json({ error: "ID inválido" }, { status: 400 });
   }
-
-  const data = await req.json();
-  const { assunto, descricao, prioridade, status, atendenteId } = data;
+  
+  const contentType = req.headers.get("content-type");
+  let data;
+  
+  if (contentType?.startsWith("multipart/form-data")) {
+    // Processar formulário com arquivos
+    const formData = await req.formData();
+    data = {
+      assunto: formData.get("assunto") as string,
+      descricao: formData.get("descricao") as string,
+      prioridade: formData.get("prioridade") as string,
+      status: formData.get("status") as string,
+      atendenteId: formData.get("atendenteId") as string,
+      arquivos: formData.getAll("arquivo")
+    };
+  } else {
+    // Processar JSON normal
+    data = await req.json();
+  }
+  
+  const { assunto, descricao, prioridade, status, atendenteId, arquivos } = data;
 
   const prioridadesValidas = ["BAIXA", "MEDIA", "ALTA", "CRITICA", "NAO_INFORMADA"];
   const statusValidos = ["ABERTA", "EM_ATENDIMENTO", "FINALIZADA", "CANCELADA"];
@@ -116,6 +136,30 @@ export async function PATCH(req: Request) {
   }
 
   try {
+    // Processar arquivos se existirem
+    let arquivosProcessados = [];
+    if (arquivos && Array.isArray(arquivos) && arquivos.length > 0) {
+      // Verificar limite de 5 arquivos
+      if (arquivos.length > 5) {
+        return NextResponse.json({ error: "Máximo de 5 imagens permitidas." }, { status: 400 });
+      }
+      
+      // Verificar se todos são imagens
+      for (const arquivo of arquivos) {
+        if (arquivo instanceof File && arquivo.size > 0 && !arquivo.type?.startsWith("image/")) {
+          return NextResponse.json({ error: "Apenas imagens são permitidas." }, { status: 400 });
+        }
+      }
+      
+      // Processar os arquivos
+      const arquivosFiles = arquivos.filter(arquivo => arquivo instanceof File && arquivo.size > 0) as File[];
+      if (arquivosFiles.length > 0) {
+        const { processarMultiplosArquivos } = await import("@/lib/solicitacao/arquivo/apiGemini");
+        arquivosProcessados = await processarMultiplosArquivos(arquivosFiles);
+      }
+    }
+    
+    // Atualizar a solicitação
     const atualizado = await prisma.solicitacao.update({
       where: { id },
       data: {
@@ -124,11 +168,27 @@ export async function PATCH(req: Request) {
         ...(prioridade && { prioridade }),
         ...(status && { status }),
         ...(atendenteId && { atendenteId }),
+        ...(arquivosProcessados.length > 0 && {
+          arquivoUrl: arquivosProcessados[0].urlArquivo,
+          arquivoNome: arquivosProcessados[0].nomeArquivo,
+          analiseIA: arquivosProcessados[0].resultado,
+          arquivos: {
+            create: arquivosProcessados.map(arquivo => ({
+              arquivoUrl: arquivo.urlArquivo,
+              arquivoNome: arquivo.nomeArquivo,
+              analiseIA: arquivo.resultado
+            }))
+          }
+        })
       },
+      include: {
+        arquivos: true
+      }
     });
 
     return NextResponse.json(atualizado);
-  } catch {
+  } catch (error) {
+    console.error("Erro ao atualizar:", error);
     return NextResponse.json({ error: "Erro ao atualizar" }, { status: 500 });
   }
 }

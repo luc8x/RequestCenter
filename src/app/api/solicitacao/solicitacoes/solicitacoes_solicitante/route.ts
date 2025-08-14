@@ -1,77 +1,71 @@
 import { NextResponse, NextRequest } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma/prisma";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
-import { writeFile } from "fs/promises";
-import { v4 as uuid } from "uuid";
-import { processarArquivo } from "@/lib/processarArquivoSolicitacao";
-import { getIO } from "@/lib/socket";
+import { v4 as uuidv4 } from "uuid";
 import path from "path";
-import { string } from "zod";
+import { writeFile } from "fs/promises";
+import { imageQueue } from "@/lib/solicitacao/arquivo/imageQueue";
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
 
   if (!session || session.user.permissao !== "SOLICITANTE") {
-    return NextResponse.json(
-      { error: "Não autorizado" },
-      { status: 403 }
-    );
+    return NextResponse.json({ error: "Não autorizado" }, { status: 403 });
   }
 
   const contentType = req.headers.get("content-type");
   if (!contentType?.startsWith("multipart/form-data")) {
-    return NextResponse.json(
-      { error: "Tipo de conteúdo inválido" },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Tipo de conteúdo inválido" }, { status: 400 });
   }
 
   const formData = await req.formData();
   const assunto = (formData.get("assunto") as string)?.trim();
   const descricao = (formData.get("descricao") as string)?.trim();
-  
+
   if (!assunto || !descricao) {
-    return NextResponse.json(
-      { error: "Assunto e descrição são obrigatórios" },
-      { status: 400 }
-    );
-  }
-  
-  const arquivos = formData.getAll("arquivo");
-  const arquivo = arquivos[0];
-  let arquivoUrl: string | null = null;
-  let arquivoNome: string | null = null;
-  let analiseIA: string | null = null;
-
-  if (arquivo && arquivo.size > 0) {
-    if (!arquivo.type?.startsWith("image/")) {
-      return NextResponse.json({ error: "Apenas imagens são permitidas." }, { status: 400 });
-    }
-    
-    const { nomeArquivo, urlArquivo, resultado } = await processarArquivo(arquivo);
-    arquivoUrl =  urlArquivo;
-    arquivoNome = nomeArquivo;
-    analiseIA = resultado;
+    return NextResponse.json({ error: "Assunto e descrição são obrigatórios" }, { status: 400 });
   }
 
+  const arquivos = formData.getAll("arquivo").filter(a => a instanceof File) as File[];
+  if (arquivos.length > 5) {
+    return NextResponse.json({ error: "Máximo de 5 imagens permitidas." }, { status: 400 });
+  }
 
   const novaSolicitacao = await prisma.solicitacao.create({
     data: {
       assunto,
       descricao,
       userId: session.user.id,
-      arquivoUrl,
-      arquivoNome,
-      analiseIA,
-    },
+      token: uuidv4(),
+    }
   });
 
-  const io = getIO();
-  // Emite para a sala específica da solicitação
-  io.to(String(novaSolicitacao.id)).emit("nova_solicitacao", novaSolicitacao);
-  // Emite para a sala de solicitações para atualizar a lista de atendentes
-  io.to("solicitacoes").emit("nova_solicitacao", novaSolicitacao);
+  for (const arquivo of arquivos) {
+    const ext = path.extname(arquivo.name).slice(1).toLowerCase();
+    const nomeArquivo = `${uuidv4()}.${ext}`;
+    const caminho = path.join(process.cwd(), "public", "uploads", "solicitacoes", nomeArquivo);
+    const buffer = Buffer.from(await arquivo.arrayBuffer());
+    const base64 = buffer.toString("base64");
+
+    await writeFile(caminho, buffer);
+
+    const arq = await prisma.arquivoSolicitacao.create({
+      data: {
+        solicitacaoId: novaSolicitacao.id,
+        arquivoNome: nomeArquivo,
+        arquivoBase64: `data:${arquivo.type};base64,${base64}`,
+        analiseIA: null,
+      },
+    });
+
+    await imageQueue.add("analise-imagem", {
+      arquivoId: arq.id,
+      arquivoNome: nomeArquivo,
+      arquivoBuffer: buffer.toString("base64"),
+      arquivoType: arquivo.type,
+    });
+  }
 
   return NextResponse.json(novaSolicitacao, { status: 201 });
 }

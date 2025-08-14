@@ -7,7 +7,7 @@ import { SidebarProvider } from "@/components/ui/sidebar"
 import { AppSidebar } from "@/components/sidebar";
 import { Conta } from "@/components/conta";
 import { Toaster } from "sonner";
-import { LoadingWrapper } from "@/components/LoadingWrapper";
+import { LoadingWrapper } from "@/components/loadingWrapper";
 
 export const metadata: Metadata = {
   title: "Request Center",
