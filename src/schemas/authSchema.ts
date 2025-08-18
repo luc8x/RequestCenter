@@ -35,5 +35,8 @@ export const registerSchema = loginSchema.extend({
     }, {
       message: "As iniciais devem estar em maiúsculas.",
     }),
-  permissao: z.any().optional(),
-});
+  permissao: z.enum(["SOLICITANTE", "ATENDENTE"], {
+    required_error: "Selecione uma permissão.",
+    invalid_type_error: "Permissão inválida.",
+  }),
+})

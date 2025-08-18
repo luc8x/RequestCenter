@@ -35,5 +35,7 @@ The easiest way to deploy your Next.js app is to use the [Vercel Platform](https
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
 
-# node src/workers/imageWorker.cjs
-# node server.js
+# node src/workers/imageWorker.cjs -> roda o job de processar as imagens
+
+# node server.js -> roda o servidor (webSocket e o next.js) porta 3001
+

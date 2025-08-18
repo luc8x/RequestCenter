@@ -11,7 +11,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
-import { Check, FileDown, Send, X, Eye, Minimize2, Maximize2, Move } from 'lucide-react';
+import { Check, FileDown, Send, X, Eye, Minimize2, Maximize2, Move, PictureInPicture2, Square } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
 import { motion } from "framer-motion";
@@ -34,6 +34,11 @@ export default function ChatLayout() {
   const [floatingPosition, setFloatingPosition] = useState({ x: 20, y: 20 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+
+  // Estados para Picture-in-Picture
+  const [isPiPSupported, setIsPiPSupported] = useState(true); // Sempre suportado para popup
+  const [isPiPActive, setIsPiPActive] = useState(false);
+  const [pipWindow, setPipWindow] = useState<Window | null>(null);
 
   //Loadings
   const [loadingMensagens, setLoadingMensagens] = useState(true);
@@ -122,6 +127,10 @@ export default function ChatLayout() {
     buscarMensagensAntigas();
   }, [solicitacaoId]);
 
+
+
+
+
   const handleEnviar = async () => {
     if (!input.trim() && !arquivo) return;
 
@@ -149,6 +158,21 @@ export default function ChatLayout() {
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensagens]);
+
+  // useEffect para monitorar fechamento da janela PiP
+  useEffect(() => {
+    if (pipWindow) {
+      const checkClosed = setInterval(() => {
+        if (pipWindow.closed) {
+          setIsPiPActive(false);
+          setPipWindow(null);
+          clearInterval(checkClosed);
+        }
+      }, 1000);
+
+      return () => clearInterval(checkClosed);
+    }
+  }, [pipWindow]);
 
   const handleStatusChange = async (novoStatus: "FINALIZADA" | "CANCELADA") => {
     try {
@@ -208,6 +232,153 @@ export default function ChatLayout() {
       };
     }
   }, [isDragging, handleMouseMove, handleMouseUp]);
+
+  // Função para abrir o chat em janela PiP
+  const openChatPiP = () => {
+    if (isPiPActive || !session?.user) return;
+    
+    try {
+      // Criar HTML para a janela PiP
+      const pipHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Chat PiP - Solicitação #${dataSolicitacao?.id}</title>
+          <meta charset="utf-8">
+          <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+          <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+          <script src="https://cdn.tailwindcss.com"></script>
+          <style>
+            body { margin: 0; font-family: system-ui, -apple-system, sans-serif; }
+            .chat-container { height: 100vh; display: flex; flex-direction: column; background: #111827; color: white; }
+            .chat-header { background: #1f2937; padding: 1rem; border-bottom: 1px solid #374151; }
+            .chat-messages { flex: 1; overflow-y: auto; padding: 1rem; }
+            .chat-input { background: #1f2937; padding: 1rem; border-top: 1px solid #374151; }
+            .message { margin-bottom: 1rem; }
+            .message-user { text-align: right; }
+            .message-content { display: inline-block; padding: 0.5rem 1rem; border-radius: 0.5rem; max-width: 70%; }
+            .message-user .message-content { background: #2563eb; }
+            .message-other .message-content { background: #374151; }
+            .input-container { display: flex; gap: 0.5rem; }
+            .input-field { flex: 1; padding: 0.5rem; border: 1px solid #374151; border-radius: 0.25rem; background: #374151; color: white; }
+            .send-button { padding: 0.5rem 1rem; background: #2563eb; color: white; border: none; border-radius: 0.25rem; cursor: pointer; }
+            .send-button:hover { background: #1d4ed8; }
+          </style>
+        </head>
+        <body>
+          <div class="chat-container">
+            <div class="chat-header">
+              <h1>Chat - Solicitação #${dataSolicitacao?.id}</h1>
+            </div>
+            <div class="chat-messages" id="messages"></div>
+            <div class="chat-input">
+              <div class="input-container">
+                <input type="text" id="messageInput" class="input-field" placeholder="Digite sua mensagem..." />
+                <button id="sendButton" class="send-button">Enviar</button>
+              </div>
+            </div>
+          </div>
+          <script>
+            let messages = ${JSON.stringify(mensagens)};
+            const userId = ${session.user.id};
+            const userType = '${session.user.permissao}';
+            const solicitacaoId = '${params.id}';
+            
+            function renderMessages() {
+              const container = document.getElementById('messages');
+              container.innerHTML = '';
+              
+              messages.forEach(msg => {
+                const isUser = msg.autorId === userId;
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message ' + (isUser ? 'message-user' : 'message-other');
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                contentDiv.innerHTML = '<strong>' + msg.autor.name + ':</strong><br>' + msg.conteudo;
+                
+                messageDiv.appendChild(contentDiv);
+                container.appendChild(messageDiv);
+              });
+              
+              container.scrollTop = container.scrollHeight;
+            }
+            
+            async function sendMessage() {
+              const input = document.getElementById('messageInput');
+              const message = input.value.trim();
+              if (!message) return;
+              
+              try {
+                const formData = new FormData();
+                formData.append('conteudo', message);
+                
+                const response = await fetch('/api/solicitacao/chat/' + solicitacaoId, {
+                  method: 'POST',
+                  body: formData
+                });
+                
+                if (response.ok) {
+                  input.value = '';
+                  loadMessages();
+                }
+              } catch (error) {
+                console.error('Erro ao enviar mensagem:', error);
+              }
+            }
+            
+            async function loadMessages() {
+              try {
+                const response = await fetch('/api/solicitacao/chat/' + solicitacaoId);
+                if (response.ok) {
+                  messages = await response.json();
+                  renderMessages();
+                }
+              } catch (error) {
+                console.error('Erro ao carregar mensagens:', error);
+              }
+            }
+            
+            document.getElementById('sendButton').onclick = sendMessage;
+            document.getElementById('messageInput').onkeypress = function(e) {
+              if (e.key === 'Enter') sendMessage();
+            };
+            
+            renderMessages();
+            setInterval(loadMessages, 2000);
+          </script>
+        </body>
+        </html>
+      `;
+      
+      // Abrir janela popup
+      const newWindow = window.open(
+        'about:blank',
+        'chatPiP',
+        'width=400,height=600,resizable=yes,scrollbars=no,status=no,menubar=no,toolbar=no'
+      );
+      
+      if (newWindow) {
+        newWindow.document.write(pipHtml);
+        newWindow.document.close();
+        setPipWindow(newWindow);
+        setIsPiPActive(true);
+        toast.success('Chat PiP aberto!');
+      }
+    } catch (error) {
+      console.error('Erro ao abrir Chat PiP:', error);
+      toast.error('Erro ao abrir Chat PiP');
+    }
+  };
+
+  // Função para fechar o chat PiP
+  const closeChatPiP = () => {
+    if (pipWindow) {
+      pipWindow.close();
+      setPipWindow(null);
+      setIsPiPActive(false);
+    }
+  };
 
   if (isFloating) {
     return (
@@ -376,15 +547,35 @@ export default function ChatLayout() {
               <CardTitle className="text-lg font-semibold text-blue-400">
                 Informações da Solicitação
               </CardTitle>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsFloating(true)}
-                className="text-gray-400 hover:text-white hover:bg-gray-700/50"
-                title="Modo flutuante"
-              >
-                <Minimize2 className="w-4 h-4" />
-              </Button>
+              <div className="flex items-center gap-2">
+                {isPiPSupported && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={isPiPActive ? closeChatPiP : openChatPiP}
+                    className={cn(
+                      "text-gray-400 hover:text-white hover:bg-gray-700/50",
+                      isPiPActive && "text-green-400 hover:text-green-300"
+                    )}
+                    title={isPiPActive ? "Sair do Picture-in-Picture" : "Ativar Picture-in-Picture"}
+                  >
+                    {isPiPActive ? (
+                      <Square className="w-4 h-4" />
+                    ) : (
+                      <PictureInPicture2 className="w-4 h-4" />
+                    )}
+                  </Button>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsFloating(true)}
+                  className="text-gray-400 hover:text-white hover:bg-gray-700/50"
+                  title="Modo flutuante"
+                >
+                  <Minimize2 className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </CardHeader>
 
@@ -817,6 +1008,8 @@ export default function ChatLayout() {
           </CardFooter>
         </Card>
       </section>
+      
+
     </div >
   );
 }

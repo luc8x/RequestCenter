@@ -71,7 +71,6 @@ export default function LoginPage() {
               {...register("email")}
               placeholder="exemplo@exemplo.com"
               required
-              aria-invalid={!!errors.email}
               aria-describedby="email-error"
             />
           </fieldset>
@@ -84,12 +83,9 @@ export default function LoginPage() {
               {...register("password")}
               placeholder="Senha"
               required
-              aria-invalid={!!errors.password}
               aria-describedby="password-error"
             />
           </fieldset>
-
-          {error && <p className="text-red-500 text-sm">{error}</p>}
 
           <fieldset className="flex items-center gap-2">
             <Checkbox id="remember" />

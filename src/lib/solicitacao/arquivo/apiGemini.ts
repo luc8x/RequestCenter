@@ -64,16 +64,16 @@ export async function processarArquivo(
 
   const imageBase64 = arquivo.buffer.toString("base64");
 
-const prompt = `
-Você é um especialista em inspeção de qualidade de produtos.
-Analise cuidadosamente a imagem fornecida e identifique, se houver:
-- Defeitos, danos ou irregularidades visíveis
-- Possível causa provável
-- Classificação: estético ou funcional
+  const prompt = `
+    Você é um especialista em inspeção de qualidade de produtos.
+    Analise cuidadosamente a imagem fornecida e identifique, se houver:
+    - Defeitos, danos ou irregularidades visíveis
+    - Possível causa provável
+    - Classificação: estético ou funcional
 
-Responda em português, de forma clara e objetiva, com no máximo 500 caracteres.
-Se não identificar problemas, responda exatamente: "Nenhum defeito encontrado".
-`;
+    Responda em português, de forma clara e objetiva, com no máximo 500 caracteres.
+    Se não identificar problemas, responda exatamente: "Nenhum defeito encontrado".
+  `;
 
   try {
     const result = await gerarConteudoComRetry(model, prompt, {

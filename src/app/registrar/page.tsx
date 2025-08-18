@@ -1,6 +1,6 @@
 "use client"
 
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";;
 import { registerSchema } from "@/schemas/authSchema";
 import { z } from "zod";
@@ -32,7 +32,7 @@ export default function RegisterPage() {
     const router = useRouter()
     const [error, setError] = useState("")
 
-    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({ resolver: zodResolver(registerSchema) })
+    const { register, handleSubmit, control, formState: { errors, isSubmitting } } = useForm<FormData>({ resolver: zodResolver(registerSchema) })
 
     const onSubmit = async (data: FormData) => {
         setError("")
@@ -95,15 +95,22 @@ export default function RegisterPage() {
 
                         <fieldset className="flex flex-col gap-2">
                             <Label>Permissões</Label>
-                            <Select name="permissao">
-                                <SelectTrigger className="w-full">
-                                    <SelectValue placeholder="Selecione sua permissão" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="SOLICITANTE">Solicitante</SelectItem>
-                                    <SelectItem value="ATENDENTE">Atendente</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            <Controller
+                                name="permissao"
+                                control={control}
+                                render={({ field }) => (
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Selecione sua permissão" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="SOLICITANTE">Solicitante</SelectItem>
+                                            <SelectItem value="ATENDENTE">Atendente</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
+                            {errors.permissao && <p className="text-red-500 text-sm">{errors.permissao.message}</p>}
                         </fieldset>
 
                         <fieldset className="flex flex-col gap-2">
