@@ -26,13 +26,13 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import { EditSolicitacaoForm } from "@/components/solicitacao/editSolicitacaoForm";
+import { EditSolicitacaoForm } from "@/components/solicitacao/editForm";
 import { Solicitacao } from "@/components/solicitacao/types";
 import { DeletarDialog } from "@/components/solicitacao/deleteForm";
 
 import { LoaderCircle, SquarePen, BadgePlus, Mail, MessageCircle, X } from "lucide-react";
 import ChatRecentes from "@/components/chat/chatRecentes";
-import { CompartilharPopover } from "@/components/compartilharSolicitacao/compartilharPopover";
+import { CompartilharPopover } from "@/components/shareSolicitacao/popover";
 
 type FormValues = {
   assunto: string;

@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema } from "@/schemas/authSchema";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+
 import { signIn } from "next-auth/react";
 import Image from "next/image";
 
@@ -23,16 +23,14 @@ type FormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
-  const [error, setError] = useState("");
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isSubmitting },
+    formState: { isSubmitting },
   } = useForm<FormData>({ resolver: zodResolver(loginSchema) });
 
   const onSubmit = async (data: FormData) => {
-    setError("");
 
     const res = await signIn("credentials", {
       email: data.email,

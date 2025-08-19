@@ -16,7 +16,7 @@ async function gerarConteudoComRetry(
   tentativas: number = 3,
   backoffBaseMs: number = 1000
 ): Promise<GenerateContentResult> {
-  let ultimaErro: any;
+  let ultimaErro: Error | null = null;
 
   for (let tentativa = 1; tentativa <= tentativas; tentativa++) {
     try {
@@ -25,14 +25,15 @@ async function gerarConteudoComRetry(
         { inlineData }
       ]);
       return result;
-    } catch (err: any) {
+    } catch (err: unknown) {
       ultimaErro = err;
       const isUltimaTentativa = tentativa === tentativas;
-      const erroTemporario = err?.status === 503;
+      const error = err as { status?: number; message?: string };
+      const erroTemporario = error?.status === 503;
 
       console.warn(
         `[Gemini] Erro na tentativa ${tentativa}/${tentativas}:`,
-        err?.message || err
+        error?.message || err
       );
 
       if (!erroTemporario || isUltimaTentativa) break;

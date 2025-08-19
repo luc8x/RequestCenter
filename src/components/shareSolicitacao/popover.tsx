@@ -49,7 +49,6 @@ export function CompartilharPopover({ solicitacao }) {
           Compartilhar via:
         </h6>
 
-        {/* Opções de compartilhamento */}
         <div className="flex flex-col gap-2">
           {opcoes.map((opt) => (
             <a
@@ -64,7 +63,6 @@ export function CompartilharPopover({ solicitacao }) {
             </a>
           ))}
 
-          {/* Sub-popover para QRCode */}
           <Popover open={openQRCode} onOpenChange={setOpenQRCode}>
             <PopoverTrigger asChild>
               <Button

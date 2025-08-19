@@ -13,7 +13,7 @@ app.prepare().then(() => {
 
   setIO(server);
 
-  server.listen(3001, () => {
-    console.log("🚀 Backend rodando em http://localhost:3001");
+  server.listen(process.env.PORTA, () => {
+    console.log(`🚀 Backend rodando em http://localhost:${process.env.PORTA}`);
   });
 });

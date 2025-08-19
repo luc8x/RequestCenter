@@ -42,3 +42,6 @@ next-env.d.ts
 
 public/uploads/mensagens/*
 public/uploads/solicitacoes/*
+
+src-tauri/target/
+src-tauri/gen/schemas

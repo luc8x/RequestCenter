@@ -34,8 +34,7 @@ export function EditSolicitacaoForm({ solicitacao, onClose }: { solicitacao: Sol
       descricao: solicitacao.descricao,
     },
   });
-  
-  // Carregar arquivos existentes
+
   React.useEffect(() => {
     const carregarArquivos = async () => {
       try {
@@ -45,7 +44,6 @@ export function EditSolicitacaoForm({ solicitacao, onClose }: { solicitacao: Sol
           if (data.arquivos) {
             setArquivosExistentes(data.arquivos);
           } else if (data.arquivoUrl) {
-            // Compatibilidade com o formato antigo
             setArquivosExistentes([{
               id: 0,
               arquivoUrl: data.arquivoUrl,
@@ -174,7 +172,6 @@ export function EditSolicitacaoForm({ solicitacao, onClose }: { solicitacao: Sol
         </fieldset>
       )}
       
-      {/* Exibir novos arquivos selecionados */}
       {novoArquivos.length > 0 && (
         <fieldset className="flex flex-col gap-2">
           <Label>Novas imagens</Label>
@@ -200,7 +197,6 @@ export function EditSolicitacaoForm({ solicitacao, onClose }: { solicitacao: Sol
         </fieldset>
       )}
       
-      {/* Campo para adicionar novos arquivos */}
       <fieldset className="flex flex-col gap-2">
         <Label htmlFor="arquivos">Adicionar imagens (máx. 5 no total)</Label>
         <Input

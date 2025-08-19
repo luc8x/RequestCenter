@@ -39,8 +39,8 @@ export default function ChatRecentes() {
         fetchChats();
     }, [fetchChats]);
 
-    useEffect(() => {
-        const socket = io("http://localhost:3001", { path: "/api/socket_io" });
+    useEffect((): (() => void) => {
+        const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL, { path: "/api/socket_io" });
         socketRef.current = socket;
 
         socket.emit("solicitacoes");

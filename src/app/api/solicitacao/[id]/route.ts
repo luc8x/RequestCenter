@@ -61,8 +61,6 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
   const userId = session.user.id;
   const permissao = session.user.permissao;
 
-  console.log(solicitacao)
-
   if (solicitacao.userId !== userId && solicitacao.atendenteId !== userId && permissao !== "ATENDENTE") {
     return NextResponse.json({ error: "Sem permissão" }, { status: 403 });
   }

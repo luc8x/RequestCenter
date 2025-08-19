@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Send, X } from "lucide-react";
 import { toast } from "sonner";
@@ -34,7 +33,6 @@ interface PiPChatWindowProps {
 export default function PiPChatWindow({ 
   solicitacaoId, 
   userId, 
-  userName, 
   userType, 
   onClose 
 }: PiPChatWindowProps) {
@@ -43,7 +41,6 @@ export default function PiPChatWindow({
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Carregar mensagens iniciais
   useEffect(() => {
     const carregarMensagens = async () => {
       try {
@@ -60,12 +57,10 @@ export default function PiPChatWindow({
     carregarMensagens();
   }, [solicitacaoId]);
 
-  // Auto scroll para a última mensagem
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensagens]);
 
-  // Polling para novas mensagens
   useEffect(() => {
     const interval = setInterval(async () => {
       try {
@@ -117,7 +112,6 @@ export default function PiPChatWindow({
 
   return (
     <div className="h-screen w-full bg-gray-900 text-white flex flex-col">
-      {/* Header */}
       <div className="bg-gray-800 p-4 flex justify-between items-center border-b border-gray-700">
         <h1 className="text-lg font-semibold">Chat PiP - Solicitação #{solicitacaoId}</h1>
         <Button
@@ -130,7 +124,6 @@ export default function PiPChatWindow({
         </Button>
       </div>
 
-      {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {mensagens.map((mensagem) => {
           const isUser = mensagem.remetente.tipo === userType;
@@ -167,7 +160,6 @@ export default function PiPChatWindow({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
       <div className="bg-gray-800 p-4 border-t border-gray-700">
         <form onSubmit={enviarMensagem} className="flex gap-2">
           <Input

@@ -1,11 +1,11 @@
-const { Worker } = require("bullmq");
-const IORedis = require("ioredis");
-const { PrismaClient } = require("@prisma/client");
-const { Buffer } = require("buffer");
-const path = require("path");
-const { writeFile } = require("fs/promises");
-const { v4: uuid } = require("uuid");
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+import { Worker } from "bullmq";
+import IORedis from "ioredis";
+import { PrismaClient } from "@prisma/client";
+import { Buffer } from "buffer";
+import path from "path";
+import { writeFile } from "fs/promises";
+import { v4 as uuid } from "uuid";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);

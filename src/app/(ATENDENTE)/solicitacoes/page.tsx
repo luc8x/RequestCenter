@@ -73,7 +73,7 @@ export default function SolicitacaoPage() {
   }, []);
 
   useEffect(() => {
-    const socket = io("http://localhost:3001", {
+    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL, {
       path: "/api/socket_io",
     });
 
@@ -115,8 +115,8 @@ export default function SolicitacaoPage() {
 
       toast.success("Solicitação atribuída com sucesso!");
       await router.push(`/chat/${solicitacaoId}`);
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      console.error(e);
       toast.error("Falha ao assumir a solicitação.");
     } finally {
       setLoading(false);

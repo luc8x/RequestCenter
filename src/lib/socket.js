@@ -9,7 +9,7 @@ export function setIO(server) {
   }
 
   io = new IOServer(server, {
-    cors: { origin: "http://localhost:3000" },
+    cors: { origin: process.env.URL_WEBSOCKET },
     path: "/api/socket_io"
   });
 
