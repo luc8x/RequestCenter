@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { registerSchema } from "@/schemas/authSchema";
 import { hashPassword } from "@/lib/bcrypt";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/prisma/prisma";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ errors: parse.error.flatten() }, { status: 400 });
   }
 
-  const { name, email, password } = parse.data;
+  const { name, email, password, permissao } = parse.data;
 
   const existingUser = await prisma.user.findUnique({ where: { email } });
 
@@ -21,11 +21,12 @@ export async function POST(req: Request) {
 
   const hashedPassword = await hashPassword(password);
 
-  const user = await prisma.user.create({
+  await prisma.user.create({
     data: {
       name,
       email,
       password: hashedPassword,
+      permissao: permissao,
     },
   });
 

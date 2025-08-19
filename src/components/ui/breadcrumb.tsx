@@ -4,46 +4,13 @@ import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { ChevronRight, MoreHorizontal } from "lucide-react"
 
-// componentes
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "./button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-
 import { cn } from "@/lib/utils"
-import { useSession } from "next-auth/react"
-import { signOut } from "next-auth/react";
 
 function Breadcrumb({ ...props }: React.ComponentProps<"nav">) {
-  const { data: session } = useSession();
-
-  if (!session) return <p>Carregando</p>;
 
   return (
     <div className="flex justify-between w-full items-center">
       <nav aria-label="breadcrumb" data-slot="breadcrumb" {...props} />
-      <div className="flex gap-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger className="flex gap-2 items-center p-1 px-2 bg-white rounded-2xl">
-            <Avatar>
-              <AvatarImage src="/user.png" />
-              <AvatarFallback>CN</AvatarFallback>
-            </Avatar>
-            <span className="rainbow-text font-semibold text-sm">{session.user?.name}</span>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuLabel>Minha conta</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={() => signOut({ callbackUrl: "/login" })} className="text-red-500">Deslogar</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
     </div>
   )
 }
@@ -83,7 +50,7 @@ function BreadcrumbLink({
   return (
     <Comp
       data-slot="breadcrumb-link"
-      className={cn("hover:text-foreground transition-colors", className)}
+      className={cn("transition-colors", className)}
       {...props}
     />
   )

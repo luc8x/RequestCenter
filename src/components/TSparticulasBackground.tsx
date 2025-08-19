@@ -19,7 +19,7 @@ export default function ParticulasDotsBackground() {
             value: 80,
             density: { enable: true, area: 800 },
           },
-          color: { value: "#ffffff" },
+          color: { value: "#3F77BA" },
           shape: { type: "circle" },
           opacity: {
             value: 0.3,
@@ -32,7 +32,7 @@ export default function ParticulasDotsBackground() {
           links: {
             enable: true,
             distance: 100,
-            color: "#ffffff",
+            color: "#3F77BA",
             opacity: 0.4,
             width: 1,
           },

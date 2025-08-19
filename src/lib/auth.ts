@@ -1,6 +1,6 @@
 import { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import prisma from "@/lib/prisma";
+import prisma from "@/lib/prisma/prisma";
 import { compare } from "bcrypt";
 
 export const authOptions: NextAuthOptions = {
@@ -28,6 +28,7 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           name: user.name,
+          permissao: user.permissao,
         };
       },
     }),
@@ -39,16 +40,20 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
+        token.permissao = user.permissao;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
+        session.user.permissao = token.permissao;
       }
       return session;
     },
   },
+
+
   pages: {
     signIn: "/login",
   },
