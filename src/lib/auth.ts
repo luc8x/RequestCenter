@@ -35,24 +35,39 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: "jwt",
+    maxAge: 60 * 60,
+  },
+
+  jwt: {
+    maxAge: 60 * 60,
   },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.permissao = user.permissao;
+        token.id = user.id
+        token.permissao = user.permissao
+        token.accessTokenExpires = Date.now() + 60 * 60 * 1000
       }
-      return token;
+
+      if (Date.now() < (token.accessTokenExpires as number)) {
+        return token
+      }
+
+      return { ...token, exp: true }
     },
+
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id as string;
-        session.user.permissao = token.permissao;
+        session.user.id = token.id as string
+        session.user.permissao = token.permissao
       }
-      return session;
+
+      session.expiresAt = token.accessTokenExpires as number
+      session.expired = token.exp === true
+
+      return session
     },
   },
-
 
   pages: {
     signIn: "/login",

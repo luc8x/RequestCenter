@@ -125,8 +125,12 @@
   }
 }
 
-html, body {
+html, body, #root {
   font-family: "Geist", "Geist Mono Fallback";
+  height: 100% !important;
+  width: 100% !important;
+  margin: 0;
+  padding: 0;
 }
 
 @keyframes fadeInUp {
