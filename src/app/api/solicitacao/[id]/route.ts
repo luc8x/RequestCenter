@@ -9,7 +9,8 @@ export async function DELETE(_req: Request, { params }: { params: { id: string }
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  const id = Number(params.id);
+  const { id: paramId } = await params;
+  const id = Number(paramId);
   if (isNaN(id)) {
     return NextResponse.json({ error: "ID inválido" }, { status: 400 });
   }
@@ -39,7 +40,8 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  const id = Number(params.id);
+  const { id: paramId } = await params;
+  const id = Number(paramId);
   if (isNaN(id)) {
     return NextResponse.json({ error: "ID inválido" }, { status: 400 });
   }

@@ -5,7 +5,8 @@ export async function PATCH(
   req: Request,
   { params }: { params: { id: string } }
 ) {
-  const solicitacaoId = parseInt(params.id, 10);
+  const { id: paramId } = await params;
+  const solicitacaoId = parseInt(paramId, 10);
   const { status } = await req.json();
 
   if (!solicitacaoId || !status) {

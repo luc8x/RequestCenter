@@ -12,7 +12,8 @@ export async function PATCH(
     return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
   }
 
-  const solicitacaoId = Number(params.id);
+  const { id: paramId } = await params;
+  const solicitacaoId = Number(paramId);
 
   try {
     const solicitacao = await prisma.solicitacao.update({

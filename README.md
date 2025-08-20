@@ -1,6 +1,6 @@
 # 🎯 RequestCenter - Sistema de Solicitações com IA
 
-Sistema completo de gerenciamento de solicitações com análise de imagens por IA, chat em tempo real e interface desktop usando Next.js + Tauri.
+Sistema completo de gerenciamento de solicitações com análise de imagens por IA e chat em tempo real usando Next.js.
 
 ## 🚀 Funcionalidades Principais
 
@@ -16,12 +16,6 @@ Sistema completo de gerenciamento de solicitações com análise de imagens por 
 - **Janela flutuante** de chat (estilo Discord)
 - **Histórico de mensagens** persistente
 - **Notificações** de novas mensagens
-
-### 🖥️ Interface Desktop (Tauri)
-- **Aplicação nativa** para Windows/macOS/Linux
-- **Janela principal** com todas as funcionalidades
-- **Janela flutuante** de chat transparente
-- **Always on top** para o chat
 
 ### 🤖 Processamento de Imagens com IA
 - **Worker assíncrono** para análise de imagens
@@ -41,7 +35,7 @@ Sistema completo de gerenciamento de solicitações com análise de imagens por 
 - **Node.js** (v18 ou superior)
 - **PostgreSQL** (banco de dados principal)
 - **Redis** (para filas de processamento)
-- **Rust** (para compilação do Tauri)
+
 
 ### Para Windows
 - **Microsoft C++ Build Tools**
@@ -79,7 +73,7 @@ NEXTAUTH_URL="http://localhost:3001"
 NEXT_PUBLIC_BASE_URL="http://localhost:3001"
 NEXT_PUBLIC_SOCKET_URL="http://localhost:3001"
 URL_WEBSOCKET="http://localhost:3001"
-URL_TAURI="http://localhost:3001"
+
 
 # Google AI
 GOOGLE_API_KEY="sua-chave-do-google-gemini"
@@ -124,14 +118,7 @@ npm run dev:frontend  # Next.js na porta 3000
 npm run dev:backend   # Servidor na porta 3001
 ```
 
-### Desenvolvimento Desktop (Tauri)
-```bash
-# Configurar Tauri
-npm run tauri:config
 
-# Executar em modo desenvolvimento
-npm run tauri:dev
-```
 
 ### Worker de Processamento de Imagens
 ```bash
@@ -147,8 +134,7 @@ npm run build
 # Executar servidor de produção
 npm start
 
-# Build do Tauri (desktop)
-npm run tauri:build
+
 ```
 
 ## 🔧 Componentes do Sistema
@@ -157,7 +143,7 @@ npm run tauri:build
 ```
 RequestCenter/
 ├── src/
-│   ├── app/                    # Páginas Next.js
+│   ├── app/                   # Páginas Next.js
 │   │   ├── (SOLICITANTE)/     # Rotas do solicitante
 │   │   ├── (ATENDENTE)/       # Rotas do atendente
 │   │   ├── chat-window/       # Janela flutuante de chat
@@ -190,35 +176,7 @@ Comunicação em tempo real:
 - Notificações de novas solicitações
 - Atualizações de status
 
-## 🎨 Interface Desktop (Tauri)
 
-### Janela Principal
-- Interface completa do sistema
-- Todas as funcionalidades disponíveis
-- Decorações normais do sistema
-
-### Janela Flutuante de Chat
-- Sem decorações do sistema operacional
-- Fundo transparente com blur
-- Sempre no topo (always on top)
-- Barra de título customizada arrastável
-- Botões customizados (minimizar/fechar)
-
-### Configuração do Tauri
-```json
-{
-  "windows": [
-    {
-      "label": "chat-window",
-      "decorations": false,
-      "transparent": true,
-      "alwaysOnTop": true,
-      "width": 400,
-      "height": 600
-    }
-  ]
-}
-```
 
 ## 🤖 Configuração da IA (Google Gemini)
 
@@ -280,15 +238,7 @@ echo $GOOGLE_API_KEY
 node src/workers/imageWorker.js
 ```
 
-**Tauri não compila:**
-```bash
-# Verificar Rust
-rustc --version
-cargo --version
 
-# Reinstalar dependências
-npm run tauri:config
-```
 
 **Banco de dados:**
 ```bash
@@ -307,10 +257,7 @@ npm run dev              # Frontend + Backend
 npm run dev:frontend     # Apenas Next.js
 npm run dev:backend      # Apenas servidor
 
-# Tauri
-npm run tauri:dev        # Desenvolvimento desktop
-npm run tauri:build      # Build desktop
-npm run tauri:config     # Gerar configuração
+
 
 # Produção
 npm run build            # Build Next.js
@@ -322,7 +269,7 @@ npm run lint             # Verificar código
 
 - **Frontend**: Next.js 15, React 19, TypeScript, Tailwind CSS
 - **Backend**: Node.js, Prisma ORM, PostgreSQL
-- **Desktop**: Tauri, Rust
+
 - **Real-time**: Socket.IO, WebSocket
 - **Queue**: BullMQ, Redis
 - **AI**: Google Gemini AI

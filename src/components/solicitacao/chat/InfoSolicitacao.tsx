@@ -9,7 +9,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
-import { Check, X, Eye, PictureInPicture2, Square } from 'lucide-react';
+import { Check, X, Eye } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
 
@@ -24,15 +24,7 @@ export default function ChatLayout() {
     const solicitacaoId = params.id as string;
     const [dataSolicitacao, setData] = useState<Record<string, unknown> | null>(null);
     const { data: session } = useSession();
-
-    const [isPiPSupported] = useState(true);
-    const [isPiPActive, setIsPiPActive] = useState(false);
-    const [isTauriAvailable, setIsTauriAvailable] = useState(false);
-    const [pipWindow, setPipWindow] = useState<Window | null>(null);
-
     const [loading, setLoading] = useState(true);
-
-
 
     const mapStatusToLabel = {
         ABERTA: "Aberta",
@@ -76,22 +68,6 @@ export default function ChatLayout() {
         fetchSolicitacao();
     }, [fetchSolicitacao]);
 
-    useEffect(() => {
-        const checkTauri = async () => {
-            try {
-                const response = await fetch('/api/tauri/chat', {
-                    method: 'GET',
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                setIsTauriAvailable(response.ok);
-            } catch {
-                setIsTauriAvailable(false);
-            }
-        };
-
-        checkTauri();
-    }, []);
-
     const handleStatusChange = async (novoStatus: "FINALIZADA" | "CANCELADA") => {
         try {
             const res = await fetch(`/api/solicitacao/conclusao/${solicitacaoId}`, {
@@ -107,97 +83,6 @@ export default function ChatLayout() {
         }
     };
 
-    const openChatPiP = async () => {
-        try {
-            if (isTauriAvailable) {
-                const solicitacaoData = {
-                    id: solicitacaoId,
-                    assunto: dataSolicitacao?.assunto,
-                    status: dataSolicitacao?.status,
-                    solicitante: dataSolicitacao?.solicitante,
-                    atendente: dataSolicitacao?.atendente
-                };
-
-                const response = await fetch('/api/tauri/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'open_chat_window',
-                        data: solicitacaoData
-                    })
-                });
-
-                if (response.ok) {
-                    setIsPiPActive(true);
-                    toast.success('Chat Flutuante está aberto!');
-                    return;
-                }
-            }
-
-            const chatUrl = `/chat-window?id=${solicitacaoId}`;
-            const newWindow = window.open(
-                chatUrl,
-                'chatPiP',
-                'width=400,height=600,resizable=yes,scrollbars=yes'
-            );
-
-            if (newWindow) {
-                setPipWindow(newWindow);
-                setIsPiPActive(true);
-                toast.success('Chat web aberto!');
-            } else {
-                toast.error('Não foi possível abrir a janela de chat');
-            }
-        } catch (error) {
-            console.error('Erro ao abrir chat:', error);
-            toast.error('Erro ao abrir chat');
-        }
-    };
-
-    const closeChatPiP = async () => {
-        try {
-            if (isTauriAvailable) {
-                const response = await fetch('/api/tauri/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'close_chat_window'
-                    })
-                });
-
-                if (response.ok) {
-                    setIsPiPActive(false);
-                    toast.success('Chat Tauri fechado!');
-                    return;
-                }
-            }
-
-            if (pipWindow && !pipWindow.closed) {
-                pipWindow.close();
-                setPipWindow(null);
-                setIsPiPActive(false);
-                toast.success('Chat web fechado!');
-            }
-        } catch (error) {
-            console.error('Erro ao fechar chat:', error);
-            toast.error('Erro ao fechar chat');
-        }
-    };
-
-    useEffect(() => {
-        if (pipWindow && !isTauriAvailable) {
-            const checkClosed = setInterval(() => {
-                if (pipWindow.closed) {
-                    setIsPiPActive(false);
-                    setPipWindow(null);
-                    clearInterval(checkClosed);
-                }
-            }, 1000);
-
-            return () => clearInterval(checkClosed);
-        }
-    }, [pipWindow, isTauriAvailable]);
-
     return (
         <section className='flex flex-col gap-4 col-span-1'>
             <Card>
@@ -206,29 +91,6 @@ export default function ChatLayout() {
                         <CardTitle className="text-lg font-semibold text-blue-400">
                             Informações da Solicitação
                         </CardTitle>
-                        <div className="flex items-center gap-2">
-                            {isPiPSupported && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={isPiPActive ? closeChatPiP : openChatPiP}
-                                    className={cn(
-                                        "text-gray-400 hover:text-white hover:bg-gray-700/50",
-                                        isPiPActive && "text-green-400 hover:text-green-300"
-                                    )}
-                                    title={isPiPActive ?
-                                        (isTauriAvailable ? "Fechar Chat Tauri" : "Fechar Chat Web") :
-                                        (isTauriAvailable ? "Abrir Chat Tauri" : "Abrir Chat Web")
-                                    }
-                                >
-                                    {isPiPActive ? (
-                                        <Square className="w-4 h-4" />
-                                    ) : (
-                                        <PictureInPicture2 className="w-4 h-4" />
-                                    )}
-                                </Button>
-                            )}
-                        </div>
                     </div>
                 </CardHeader>
 
