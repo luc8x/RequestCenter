@@ -36,20 +36,9 @@ Sistema completo de gerenciamento de solicitações com análise de imagens por 
 - **PostgreSQL** (banco de dados principal)
 - **Redis** (para filas de processamento)
 
-
 ### Para Windows
 - **Microsoft C++ Build Tools**
 - **WebView2** (geralmente já instalado)
-
-### Instalação do Rust
-```bash
-# Windows
-# Baixe e execute: https://rustup.rs/
-
-# macOS/Linux
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
-source ~/.cargo/env
-```
 
 ## ⚙️ Configuração do Ambiente
 
@@ -118,8 +107,6 @@ npm run dev:frontend  # Next.js na porta 3000
 npm run dev:backend   # Servidor na porta 3001
 ```
 
-
-
 ### Worker de Processamento de Imagens
 ```bash
 # Em um terminal separado, executar o worker
@@ -146,13 +133,12 @@ RequestCenter/
 │   ├── app/                   # Páginas Next.js
 │   │   ├── (SOLICITANTE)/     # Rotas do solicitante
 │   │   ├── (ATENDENTE)/       # Rotas do atendente
-│   │   ├── chat-window/       # Janela flutuante de chat
+│   │   ├── chat-pip/       # Janela flutuante de chat
 │   │   └── api/               # API Routes
 │   ├── components/            # Componentes React
 │   ├── lib/                   # Utilitários e configurações
 │   ├── hooks/                 # Custom hooks
 │   └── workers/               # Workers de processamento
-├── src-tauri/                 # Configuração Tauri
 ├── prisma/                    # Schema e migrações do banco
 └── public/                    # Arquivos estáticos
 ```

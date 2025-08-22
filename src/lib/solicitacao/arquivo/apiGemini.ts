@@ -72,7 +72,7 @@ export async function processarArquivo(
     - Possível causa provável
     - Classificação: estético ou funcional
 
-    Responda em português, de forma clara e objetiva, com no máximo 500 caracteres.
+    Responda em português, de forma clara e objetiva, com no máximo 500 caracteres, especificamente somente 500 caracteres!!!.
     Se não identificar problemas, responda exatamente: "Nenhum defeito encontrado".
   `;
 

@@ -110,7 +110,9 @@ export default function ChatRecentes() {
                                                         )}
                                                     </span>
                                                 )}
-                                                <span className="text-sm text-gray-400">{item.mensagem}</span>
+                                                <span className="text-sm text-gray-400">
+                                                    {item.mensagem.length > 30 ? `${item.mensagem.slice(0, 30)}...` : item.mensagem}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>

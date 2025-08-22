@@ -10,11 +10,11 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import dayjs from "dayjs";
 import "dayjs/locale/pt-br";
-import { FileDown, Send, PictureInPicture,MessageCircleMore } from 'lucide-react';
+import { FileDown, File, X, Send, PictureInPicture, MessageCircleMore } from 'lucide-react';
 import { useParams } from "next/navigation";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import io, { Socket } from "socket.io-client";
-import Image from 'next/image'
+import { Dialog, DialogContent } from "../ui/dialog";
 
 const chatChannel = new BroadcastChannel('chat-channel');
 
@@ -22,20 +22,17 @@ export default function Chat() {
   const params = useParams();
   const solicitacaoId = params.id as string;
   const { data: session } = useSession();
-
   const [loadingMensagens, setLoadingMensagens] = useState(true);
-
   const chatEndRef = useRef<HTMLDivElement>(null);
   const socketRef = useRef<Socket | null>(null);
-
   const [input, setInput] = useState("");
   const [mensagens, setMensagens] = useState([]);
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [isPipActive, setIsPipActive] = useState(false);
-
   const chatContainerRef = useRef<HTMLDivElement>(null);
-
+  const [confirmarUrl, setConfirmarUrl] = useState<string | null>(null);
   const isDocumentPiPSupported = () => 'documentPictureInPicture' in window;
+  const inputFileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL, {
@@ -61,9 +58,11 @@ export default function Chat() {
         setMensagens((prev) => [...prev, event.data.content]);
       } else if (event.data.type === 'syncMessages') {
         setMensagens(event.data.messages);
+      } else if (event.data.type === 'requestSolicitacaoId') {
+        chatChannel.postMessage({ type: 'setSolicitacaoId', solicitacaoId });
       }
     };
-  }, []);
+  }, [solicitacaoId]);
 
   useEffect(() => {
     const buscarMensagensAntigas = async () => {
@@ -113,7 +112,7 @@ export default function Chat() {
       });
 
       const iframe = pipWindow.document.createElement('iframe');
-      iframe.src = '/chat-window';
+      iframe.src = `/chat-pip?solicitacaoId=${solicitacaoId}`;
       iframe.style.width = '100%';
       iframe.style.height = '100%';
       iframe.style.border = 'none';
@@ -181,7 +180,7 @@ export default function Chat() {
                     disabled={!isDocumentPiPSupported() || isPipActive}
                     className="text-blue-400 hover:text-white"
                   >
-                    <PictureInPicture  className="w-4 h-4 mr-1" />
+                    <PictureInPicture className="w-4 h-4 mr-1" />
                   </Button>
                 </>
               )}
@@ -194,7 +193,7 @@ export default function Chat() {
               <CardContent className="flex-1 flex items-center justify-center py-6 px-4">
                 <div className="flex flex-col items-center text-center space-y-3">
                   <span className="text-blue-400 font-semibold text-lg flex items-center gap-3">
-                    <MessageCircleMore className="w-10 h-10"/>  Chat em modo PiP
+                    <MessageCircleMore className="w-10 h-10" />  Chat em modo Picture-in-Picture
                   </span>
                   <p className="text-gray-400 text-sm max-w-xs">
                     Continue acompanhando suas mensagens na janela flutuante.
@@ -293,8 +292,8 @@ export default function Chat() {
                                   rel="noopener noreferrer"
                                   className="underline"
                                 >
-                                  <Image
-                                    src={msg.arquivoUrl}
+                                  <img
+                                    src={process.env.NEXT_PUBLIC_BASE_URL + msg.arquivoUrl}
                                     width={200}
                                     height={200}
                                     alt="Arquivo"
@@ -302,10 +301,8 @@ export default function Chat() {
                                   />
                                 </a>
                               ) : (
-                                <a
-                                  href={msg.arquivoUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
+                                <div
+                                  onClick={() => setConfirmarUrl(msg.arquivoUrl)}
                                   className="group flex items-center gap-3 p-3 rounded-lg border border-gray-600 bg-gray-800 hover:bg-gray-700 transition-colors max-w-xs"
                                 >
                                   <div className="flex-shrink-0 bg-gray-700 rounded-md p-2">
@@ -315,7 +312,7 @@ export default function Chat() {
                                     <span className="text-white text-sm truncate">{msg.arquivoNome ?? "Arquivo"}</span>
                                     <span className="text-xs text-gray-400 group-hover:underline">Clique para abrir</span>
                                   </div>
-                                </a>
+                                </div>
                               )}
                             </div>
                           )}
@@ -348,39 +345,88 @@ export default function Chat() {
                 <div ref={chatEndRef} />
               </CardContent>
 
-              <CardFooter className="border-t border-blue-400 px-4 py-3">
+              <CardFooter className="flex flex-col w-full border-t border-blue-400 px-4 py-3">
+                <AnimatePresence>
+                  {arquivo && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, height: 0, overflow: 'hidden', paddingTop: 0, paddingBottom: 0, marginBottom: 0 }}
+                      animate={{ opacity: 1, y: 0, height: 'auto', paddingTop: '1rem', paddingBottom: '1rem', marginBottom: '1rem' }}
+                      exit={{ opacity: 0, y: 10, height: 0, paddingTop: 0, paddingBottom: 0, marginBottom: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="flex items-center px-2 justify-between border border-gray-700/50 rounded-2xl w-full"
+                    >
+                      <div className="flex gap-3 items-center">
+                        <File size={23} color="#3381ff" />
+                        <span className="text-xs text-blue-400 truncate max-w-[400px]">
+                          {arquivo
+                            ? arquivo.name.length > 50
+                              ? arquivo.name.slice(0, 50) + '...'
+                              : arquivo.name
+                            : 'Sem arquivo'}
+                        </span>
+                      </div>
+                      <X
+                        size={23}
+                        color="#f14445"
+                        className="cursor-pointer"
+                        onClick={() => {
+                          setArquivo(null)
+                          if (inputFileRef.current) inputFileRef.current.value = "";
+                          inputFileRef.current?.blur();
+                        }}
+                      />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
                     handleEnviar();
                   }}
-                  className="flex items-center gap-2 w-full"
-                  encType="multipart/form-data"
+                  className="w-full relative flex items-center gap-3"
                 >
-                  {arquivo && (
-                    <span className="text-xs text-gray-400 truncate max-w-[200px]">{arquivo.name}</span>
-                  )}
-
-                  <input
+                  <Input
                     type="file"
                     id="upload"
+                    ref={inputFileRef}
                     className="hidden"
-                    onChange={(e) => setArquivo(e.target.files?.[0] ?? null)}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] ?? null;
+                      setArquivo(file);
+                      
+                      // if (file) {
+                      //   setTimeout(() => {
+                      //     scrollToBottom();
+                      //   }, 350);
+                      // }
+                    }}
                   />
-                  <label htmlFor="upload" className="bg-secondary p-1.5 text-black rounded-md">
-                    <FileDown size={20} />
+                  <label htmlFor="upload" className="rounded-full w-14 h-12 p-0 flex items-center justify-center transition-all duration-200 bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-blue-500/25">
+                    <FileDown size={23} />
                   </label>
 
                   <Input
-                    placeholder="Digite sua mensagem..."
+                    placeholder="Digite uma mensagem..."
+                    style={{
+                      width: '100%',
+                      height: '50px',
+                    }}
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    className="flex-1 text-white placeholder:text-gray-400/70 border-ring-700 focus:ring-gray-400 focus:border-ring-400"
+                    className="w-full bg-gray-700/80 border-gray-600/50 text-white placeholder:text-gray-400 focus:ring-blue-500/50 focus:border-blue-500/50 backdrop-blur-sm rounded-full pr-11 py-3 text-sm"
                   />
-
-                  <Button type="submit" variant="secondary" disabled={!input.trim() && !arquivo}>
-                    <Send className="w-4 h-4 mr-1" />
-                    Enviar
+                  <Button
+                    type="submit"
+                    disabled={!input.trim() && !arquivo}
+                    size="sm"
+                    className={cn(
+                      "absolute right-2 rounded-full w-8 h-8 p-0 transition-all duration-200",
+                      (input.trim() || arquivo)
+                        ? "bg-blue-500 hover:bg-blue-600 text-white shadow-lg hover:shadow-blue-500/25"
+                        : "bg-gray-600 text-gray-400 cursor-not-allowed"
+                    )}
+                  >
+                    <Send size={20} />
                   </Button>
                 </form>
               </CardFooter>
@@ -388,6 +434,37 @@ export default function Chat() {
           )}
         </Card>
       </div>
+
+      <Dialog open={!!confirmarUrl} onOpenChange={() => setConfirmarUrl(null)}>
+        <DialogContent className="sm:max-w-md bg-gray-900/95 backdrop-blur-sm border border-gray-700">
+          <div className="flex flex-col gap-4">
+            <h2 className="text-lg font-semibold text-white">Abrir arquivo externo</h2>
+            <p className="text-sm text-gray-400">
+              Este arquivo será aberto em uma nova aba. Deseja continuar?
+            </p>
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button
+              variant={'transparent'}
+              onClick={() => setConfirmarUrl(null)}
+              className="px-4 py-2 text-sm text-gray-300 hover:text-white border border-gray-700/50 transition"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                if (confirmarUrl) {
+                  window.open(confirmarUrl, '_blank');
+                  setConfirmarUrl(null);
+                }
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+            >
+              Abrir
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </section>
   );
 }

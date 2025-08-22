@@ -52,7 +52,7 @@ export async function AppSidebar() {
     <Sidebar className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white shadow-lg">
       <SidebarHeader className="p-4 border-b border-gray-700">
         <div className="flex items-center justify-center gap-3">
-          <Image alt="Logo" src="/logo.png" width={32} height={32} className="rounded-sm" />
+          <img alt="Logo" src="http://localhost:3001/logo.png" width={32} height={32} className="rounded-sm" />
           <span className="text-1xl font-bold tracking-wide text-blue-400">REQUEST CENTER</span>
         </div>
       </SidebarHeader>

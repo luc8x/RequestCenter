@@ -3,43 +3,29 @@
 import { useSession } from "next-auth/react";
 import { useCallback } from "react";
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import Image from 'next/image';
+
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import dayjs from "dayjs";
-import "dayjs/locale/pt-br";
-import { Check, X, Eye } from 'lucide-react';
 import { Badge } from "@/components/ui/badge";
-import { useParams } from "next/navigation";
-
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import Image from 'next/image'
+import { Check, X, Eye } from 'lucide-react';
+
+import {mapStatusToLabel, mapPrioridadeToLabel} from '@/lib/utils';
+import { cn } from "@/lib/utils";
+import "dayjs/locale/pt-br";
+import dayjs from "dayjs";
 
 export default function ChatLayout() {
-    // Dados
     const params = useParams();
     const solicitacaoId = params.id as string;
     const [dataSolicitacao, setData] = useState<Record<string, unknown> | null>(null);
     const { data: session } = useSession();
     const [loading, setLoading] = useState(true);
-
-    const mapStatusToLabel = {
-        ABERTA: "Aberta",
-        EM_ATENDIMENTO: "Em atendimento",
-        CANCELADA: "Cancelada",
-        FINALIZADA: "Concluída",
-    };
-
-    const mapPrioridadeToLabel = {
-        NAO_INFORMADA: "Não informado",
-        BAIXA: "Baixa",
-        MEDIA: "Média",
-        ALTA: "Alta",
-        CRITICA: "Critica",
-    };
 
     const fetchSolicitacao = useCallback(async () => {
         try {
@@ -197,7 +183,7 @@ export default function ChatLayout() {
                                                 </span>
                                             </DialogTrigger>
 
-                                            <DialogContent className="min-w-[84vw] max-h-[90vh] bg-gray-900/95 backdrop-blur-sm border border-gray-700 overflow-hidden p-0" showCloseButton={false}>
+                                            <DialogContent className="min-w-[75dvw] max-h-[75vh] bg-gray-900/95 backdrop-blur-sm border border-gray-700 overflow-hidden p-0" showCloseButton={false}>
                                                 <DialogHeader className="px-6 pt-6 text-white">
                                                     <DialogTitle>Sugestão da IA</DialogTitle>
                                                     <DialogDescription className="text-gray-300">
@@ -209,24 +195,24 @@ export default function ChatLayout() {
                                                 </DialogClose>
 
                                                 <div className="flex-1 flex flex-col items-center justify-center p-8">
-                                                    <Carousel className="w-full max-w-[75vw] relative">
+                                                    <Carousel className="w-full relative">
                                                         <CarouselContent>
                                                             {dataSolicitacao.arquivos.map((arquivo, index) => (
                                                                 <CarouselItem key={arquivo.id}>
                                                                     <div className="flex flex-col items-center space-y-6">
-                                                                        <div className="relative w-full flex items-center justify-center rounded-xl shadow-2xl overflow-hidden group">
+                                                                        <div className="relative w-full flex items-center justify-center rounded-xl overflow-hidden group">
                                                                             <Image
                                                                                 src={arquivo.arquivoBase64}
                                                                                 alt={`Arquivo ${index + 1}`}
-                                                                                className="w-full h-auto object-contain max-h-[65vh] transition-transform duration-300"
-                                                                                width={1200}
-                                                                                height={1200}
+                                                                                className="w-full h-auto object-contain max-h-[45vh] transition-transform duration-300"
+                                                                                width={500}
+                                                                                height={500}
                                                                                 priority
                                                                                 quality={100}
                                                                             />
                                                                         </div>
 
-                                                                        <div className="w-full max-w-4xl text-center">
+                                                                        <div className="w-full max-w-[80%] text-center">
                                                                             <div className="text-gray-300 text-sm leading-relaxed px-6 py-4 bg-gray-800/30 rounded-lg border border-gray-700/50 min-h-[80px] max-h-[200px] overflow-y-auto">
                                                                                 <div className="whitespace-pre-wrap break-words">
                                                                                     {arquivo.analiseIA || "Análise ainda não concluída"}

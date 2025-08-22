@@ -23,8 +23,13 @@ export async function GET(req: Request) {
   }
 
   const solicitacoes = await prisma.solicitacao.findMany({
-    where: { userId: session.user.id },
-    select
+    where: {
+      atendenteId: session?.user?.id,
+      status: {
+        in: ['EM_ATENDIMENTO'],
+      },
+    },
+    select,
   });
 
   return NextResponse.json(solicitacoes);
